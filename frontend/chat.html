@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Retriva - Chat</title>
+<link rel="stylesheet" href="css/tokens.css" />
+<link rel="stylesheet" href="css/dashboard.css" />
+<link rel="stylesheet" href="css/chat.css" />
+</head>
+<body>
+
+<div class="corner-account" id="corner-account">
+  <button class="corner-account-btn" id="account-btn">
+    <span id="account-avatar">?</span>
+  </button>
+  <div class="corner-account-menu" id="account-menu">
+    <div class="corner-account-info">
+      <div class="corner-account-name" id="account-name">-</div>
+      <div class="corner-account-email" id="account-email">-</div>
+    </div>
+    <button class="account-menu-item danger" id="sign-out-btn">Sign out</button>
+  </div>
+</div>
+
+<div class="app">
+
+  <div class="workspace">
+
+    <button class="floating-toggle" id="sidebar-toggle-btn" title="Toggle sidebar">
+      <svg viewBox="0 0 20 20" fill="none" stroke-width="1.6" stroke-linecap="round">
+        <path d="M3 5h14M3 10h14M3 15h14"/>
+      </svg>
+    </button>
+
+    <aside class="sidebar" id="main-sidebar">
+      <div class="sidebar-inner">
+
+        <div class="sidebar-top">
+          <a href="index.html" class="wordmark">Retriva</a>
+        </div>
+
+        <a href="dashboard.html" class="sidebar-back-link">&larr; All knowledge bases</a>
+
+        <div class="sidebar-kb-info">
+          <h3 id="kb-name">Loading...</h3>
+          <p id="kb-desc"></p>
+        </div>
+
+        <div class="sidebar-search">
+          <input type="text" id="chat-search-input" placeholder="Search chats..." />
+        </div>
+
+        <button class="btn btn-secondary sidebar-new-chat" id="new-chat-btn">+ New chat</button>
+
+        <div class="sidebar-body">
+          <div class="doc-list-label">Documents</div>
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="file-input" accept=".pdf,.docx,.txt,.md,.csv" multiple />
+            <div class="upload-zone-title">Drop files or click to upload</div>
+            <div class="upload-zone-sub">PDF - DOCX - TXT - MD - CSV - max 25MB</div>
+          </div>
+          <div class="doc-list" id="doc-list">
+            <div class="empty-doc-note">No documents yet.</div>
+          </div>
+
+          <div class="doc-list-label">Chats</div>
+          <div class="chat-list" id="chat-list">
+            <div class="empty-chat-list-note">No chats yet.</div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <div class="chat-pane">
+      <div class="chat-topbar">
+        <span class="chat-title" id="chat-title-label"></span>
+        <button class="btn btn-secondary inspector-btn" id="inspector-toggle-btn">Debug retrieval</button>
+      </div>
+
+      <div class="inspector-panel" id="inspector-panel">
+        <div class="inspector-input-row">
+          <input type="text" id="inspector-query-input" placeholder="Test a query against this knowledge base..." />
+          <button class="btn btn-secondary" id="inspector-run-btn">Run</button>
+        </div>
+        <div id="inspector-results"></div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="chat-empty">
+          <h3>Ask something about this knowledge base</h3>
+          <p>Upload a document on the left, then ask a question here. Every answer will show exactly which source it came from.</p>
+        </div>
+      </div>
+
+      <div class="chat-input-bar">
+        <div class="chat-input-wrap">
+          <textarea id="chat-input" rows="1" placeholder="Ask a question..."></textarea>
+        </div>
+        <button id="send-btn" title="Send">
+          <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 8L14.5 1.5L8 14.5L6.5 9.5L1.5 8Z"/></svg>
+        </button>
+        <button id="stop-btn" title="Stop generating">
+          <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="12" height="12" rx="1"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="sources-panel" id="sources-panel">
+      <div class="sources-panel-header">
+        <h3>Sources</h3>
+        <button class="sources-panel-close" id="sources-panel-close">&times;</button>
+      </div>
+      <div class="sources-panel-body" id="sources-panel-body"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="new-kb-modal">
+  <div class="modal">
+    <h3>New knowledge base</h3>
+    <div class="field">
+      <label for="kb-name-input">Name</label>
+      <input type="text" id="kb-name-input" />
+    </div>
+    <div class="field">
+      <label for="kb-desc-input">Description (optional)</label>
+      <input type="text" id="kb-desc-input" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="kb-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="kb-modal-create">Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+﻿/* ══════════════════════════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════════════════════════ */
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+/* ── Nav ─────────────────────────────────────────────────────── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(250, 247, 241, 0.88);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) 0;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  font-size: var(--text-xl);
+  color: var(--ink);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.nav-link {
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  transition: color 0.15s var(--ease);
+}
+.nav-link:hover { color: var(--ink); }
+
+/* ── Hero ────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  padding: var(--space-9) 0 var(--space-8);
+  overflow: hidden;
+}
+
+.hero-quote {
+  position: absolute;
+  top: -60px;
+  left: -20px;
+  font-family: var(--font-display);
+  font-size: 22rem;
+  font-weight: 700;
+  color: var(--sage);
+  opacity: 0.16;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero-content {
+  position: relative;
+  max-width: 680px;
+}
+
+.hero-eyebrow {
+  margin-bottom: var(--space-4);
+}
+
+.hero h1 {
+  font-size: var(--text-4xl);
+  margin-bottom: var(--space-5);
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--sage-deep);
+}
+
+.hero-sub {
+  font-size: var(--text-lg);
+  max-width: 520px;
+  margin-bottom: var(--space-6);
+}
+
+.hero-actions {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+/* ── Trust strip ─────────────────────────────────────────────── */
+.trust-strip {
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: var(--space-7);
+  flex-wrap: wrap;
+}
+
+.trust-item {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  letter-spacing: 0.03em;
+}
+
+.trust-item strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ── Features ────────────────────────────────────────────────── */
+.features {
+  padding: var(--space-9) 0;
+}
+
+.section-head {
+  max-width: 560px;
+  margin-bottom: var(--space-7);
+}
+
+.section-head .eyebrow { margin-bottom: var(--space-3); }
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.feature-card {
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line-2);
+}
+
+.feature-icon {
+  width: 36px;
+  height: 36px;
+  margin-bottom: var(--space-4);
+  color: var(--sage-deep);
+}
+
+.feature-card h3 { margin-bottom: var(--space-2); }
+.feature-card p { font-size: var(--text-sm); }
+
+/* ── How it works ────────────────────────────────────────────── */
+.how {
+  padding: var(--space-9) 0;
+  background: var(--surface-2);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-7);
+}
+
+.step-num {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--text-2xl);
+  color: var(--blush);
+  margin-bottom: var(--space-3);
+}
+
+.step h3 { margin-bottom: var(--space-2); }
+.step p { font-size: var(--text-sm); }
+
+/* ── CTA band ────────────────────────────────────────────────── */
+.cta-band {
+  padding: var(--space-9) 0;
+  text-align: center;
+}
+
+.cta-band h2 {
+  max-width: 600px;
+  margin: 0 auto var(--space-5);
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.footer {
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-tagline {
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .hero h1 { font-size: var(--text-3xl); }
+  .hero-quote { font-size: 14rem; top: -30px; }
+  .feature-grid, .steps { grid-template-columns: 1fr; }
+  .nav-links .nav-link:not(.btn) { display: none; }
+}

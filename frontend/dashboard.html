@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Retriva - Dashboard</title>
+<link rel="stylesheet" href="css/tokens.css" />
+<link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+
+<div class="corner-account" id="corner-account">
+  <button class="corner-account-btn" id="account-btn">
+    <span id="account-avatar">?</span>
+  </button>
+  <div class="corner-account-menu" id="account-menu">
+    <div class="corner-account-info">
+      <div class="corner-account-name" id="account-name">-</div>
+      <div class="corner-account-email" id="account-email">-</div>
+    </div>
+    <button class="account-menu-item danger" id="sign-out-btn">Sign out</button>
+  </div>
+</div>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="index.html" class="wordmark">Retriva</a>
+      <button class="btn btn-secondary sidebar-new-kb" id="new-kb-btn">+ New knowledge base</button>
+    </div>
+
+    <div class="sidebar-search"><input type="text" id="chat-search-input" placeholder="Search chats..." /></div>
+
+    <div class="sidebar-section-label">Knowledge bases</div>
+    <div class="kb-list" id="kb-list">
+      <div class="empty-kb-note">Loading...</div>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="main-empty">
+      <h2>Select a knowledge base to start</h2>
+      <p>Choose one from the sidebar, or create a new one to upload documents and start asking questions.</p>
+    </div>
+  </main>
+
+</div>
+
+<div class="modal-overlay" id="new-kb-modal">
+  <div class="modal">
+    <h3>New knowledge base</h3>
+    <div class="field">
+      <label for="kb-name-input">Name</label>
+      <input type="text" id="kb-name-input" />
+    </div>
+    <div class="field">
+      <label for="kb-desc-input">Description (optional)</label>
+      <input type="text" id="kb-desc-input" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="kb-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="kb-modal-create">Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

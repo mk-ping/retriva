@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: retriva-postgres
+    environment:
+      - POSTGRES_USER=retriva
+      - POSTGRES_PASSWORD=retriva_dev_password
+      - POSTGRES_DB=retriva
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U retriva"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: retriva-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app
+      - retriva_storage:/app/storage
+      # reuses the embedding model you already downloaded, so the container doesn't download it again
+      - C:/Users/Mehak/.cache/chroma:/root/.cache/chroma
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://retriva:retriva_dev_password@postgres:5432/retriva
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    image: nginx:alpine
+    container_name: retriva-frontend
+    ports:
+      - "5500:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  retriva_storage:
+  postgres_data:
