@@ -1,4 +1,4 @@
-import os
+﻿import os
 
 from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader, CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -36,20 +36,16 @@ def _get_loader(filepath: str, ext: str):
     raise IngestionError(f"No loader for {ext}")
 
 
-def extract_and_chunk(filepath: str, ext: str) -> list[dict]:
-    """Returns a list of {"text": str, "page": int | None}."""
-    docs = _get_loader(filepath, ext).load()
+def extract_and_chunk(filepath: str, ext: str) -> list[str]:
+    loader = _get_loader(filepath, ext)
+    docs = loader.load()
 
     # CSV rows stay whole, because splitting a row by length would separate its fields
     if ext == ".csv":
-        return [{"text": d.page_content, "page": None} for d in docs if d.page_content.strip()]
+        return [d.page_content for d in docs if d.page_content.strip()]
 
-    chunks = []
-    for d in docs:
-        if not d.page_content.strip():
-            continue
-        page = d.metadata.get("page")  # PyPDFLoader pages are 0-based
-        page_no = page + 1 if isinstance(page, int) else None
-        for piece in _splitter.split_text(d.page_content):
-            chunks.append({"text": piece, "page": page_no})
-    return chunks
+    full_text = "\n\n".join(d.page_content for d in docs if d.page_content.strip())
+    if not full_text.strip():
+        return []
+
+    return _splitter.split_text(full_text)

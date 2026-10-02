@@ -1,4 +1,4 @@
-from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
+﻿from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 from langchain_core.embeddings import Embeddings
 from langchain_community.vectorstores import Chroma
 
@@ -42,18 +42,13 @@ def _get_store(kb_id: str) -> Chroma:
     return _store_cache[name]
 
 
-def add_chunks(kb_id: str, doc_id: str, filename: str, chunks: list[dict]):
+def add_chunks(kb_id: str, doc_id: str, filename: str, chunks: list[str]):
     if not chunks:
         return
     store = _get_store(kb_id)
     ids = [f"{doc_id}_{i}" for i in range(len(chunks))]
-    metadatas = []
-    for i, c in enumerate(chunks):
-        m = {"doc_id": doc_id, "filename": filename, "chunk_index": i}
-        if c["page"] is not None:  # Chroma rejects None metadata values
-            m["page"] = c["page"]
-        metadatas.append(m)
-    store.add_texts(texts=[c["text"] for c in chunks], metadatas=metadatas, ids=ids)
+    metadatas = [{"doc_id": doc_id, "filename": filename, "chunk_index": i} for i in range(len(chunks))]
+    store.add_texts(texts=chunks, metadatas=metadatas, ids=ids)
 
 
 def delete_document_chunks(kb_id: str, doc_id: str):
@@ -85,7 +80,6 @@ def query(kb_id: str, question: str, top_k: int = RETRIEVAL_TOP_K) -> list[dict]
             "doc_id": doc.metadata.get("doc_id"),
             "filename": doc.metadata.get("filename"),
             "chunk_index": doc.metadata.get("chunk_index"),
-            "page": doc.metadata.get("page"),
             "score": max(0.0, min(1.0, round(1 - dist, 4))),
         })
 

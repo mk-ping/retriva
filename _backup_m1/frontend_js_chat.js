@@ -1,4 +1,4 @@
-const params = new URLSearchParams(window.location.search);
+﻿const params = new URLSearchParams(window.location.search);
 const kbId = params.get("kb");
 
 let currentKB = null;
@@ -315,7 +315,7 @@ function appendMessage(role, content, sources = [], messageId = null, feedback =
     sources.forEach(s => {
       const chip = document.createElement("div");
       chip.className = "source-chip";
-      chip.innerHTML = `${escapeHtml(s.filename)}${s.page ? " · p." + s.page : ""} <span class="source-chip-score">${Math.round(s.score * 100)}%</span>`;
+      chip.innerHTML = `${escapeHtml(s.filename)} <span class="source-chip-score">${Math.round(s.score * 100)}%</span>`;
       chip.addEventListener("click", () => showSourceDetail(s));
       srcWrap.appendChild(chip);
     });
@@ -399,7 +399,7 @@ async function regenerateLast(oldRow) {
   oldRow.remove();
   const typingRow = appendTyping();
   try {
-    const response = await api.sendMessage(currentChatId, lastUserMessage, true);
+    const response = await api.sendMessage(currentChatId, lastUserMessage);
     typingRow.remove();
     appendMessage("assistant", response.content, response.sources || [], response.id, response.feedback);
     loadChatList();
@@ -414,7 +414,7 @@ function showSourceDetail(source) {
   const body = document.getElementById("sources-panel-body");
   body.innerHTML = `
     <div class="source-detail">
-      <div class="source-detail-file">${escapeHtml(source.filename)}${source.page ? " · page " + source.page : ""}</div>
+      <div class="source-detail-file">${escapeHtml(source.filename)}</div>
       <div class="source-detail-score">${Math.round(source.score * 100)}% match</div>
       <div class="source-detail-text">${escapeHtml(source.chunk_text)}</div>
     </div>
@@ -552,7 +552,7 @@ async function runInspector() {
     resultsEl.innerHTML = data.chunks.map((c, i) => `
       <div class="inspector-chunk">
         <div class="inspector-chunk-head">
-          <span>#${i + 1} — ${escapeHtml(c.filename)}${c.page ? " · p." + c.page : ""}</span>
+          <span>#${i + 1} — ${escapeHtml(c.filename)}</span>
           <span class="inspector-chunk-score">${Math.round(c.score * 100)}% match</span>
         </div>
         <div class="inspector-chunk-text">${escapeHtml(c.text)}</div>

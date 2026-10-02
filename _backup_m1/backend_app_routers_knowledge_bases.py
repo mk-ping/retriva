@@ -1,4 +1,4 @@
-import hashlib
+﻿import hashlib
 import os
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from database import get_db, SessionLocal, KnowledgeBase, Document, User
-from config import UPLOAD_DIR, MAX_FILE_SIZE_MB
+from config import UPLOAD_DIR
 from auth import get_current_user
 import ingestion
 import vectorstore
@@ -141,7 +141,7 @@ def upload_document(
 ):
     kb = _get_owned_kb(kb_id, user, db)
 
-    content = file.file.read(MAX_FILE_SIZE_MB * 1024 * 1024 + 1)
+    content = file.file.read()
     try:
         ext = ingestion.validate_file(file.filename, len(content))
     except ingestion.IngestionError as e:

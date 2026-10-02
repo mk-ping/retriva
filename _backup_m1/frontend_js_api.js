@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+﻿const API_BASE = "http://localhost:8000";
 
 function getToken() {
   return localStorage.getItem("retriva_token");
@@ -72,8 +72,8 @@ const api = {
   renameChat: (chatId, title) =>
     apiRequest(`/api/chats/${chatId}`, { method: "PATCH", body: JSON.stringify({ title }) }),
   deleteChat: (chatId) => apiRequest(`/api/chats/${chatId}`, { method: "DELETE" }),
-  sendMessage: (chatId, content, regenerate = false) =>
-    apiRequest(`/api/chats/${chatId}/messages`, { method: "POST", body: JSON.stringify({ content, regenerate }) }),
+  sendMessage: (chatId, content) =>
+    apiRequest(`/api/chats/${chatId}/messages`, { method: "POST", body: JSON.stringify({ content }) }),
 };
 
 async function streamMessage(chatId, content, signal) {
