@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Retriva - Downvoted answers</title>
+<link rel="stylesheet" href="css/tokens.css" />
+<style>
+  .fb-wrap { max-width: 760px; margin: 0 auto; padding: var(--space-7) var(--space-5); }
+  .fb-wrap h2 { font-size: var(--text-2xl); margin: var(--space-3) 0 var(--space-2); }
+  .fb-back { font-size: var(--text-sm); color: var(--ink-3); }
+  .fb-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-5); margin-top: var(--space-4); }
+  .fb-label { font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-top: var(--space-3); }
+  .fb-text { font-size: var(--text-sm); color: var(--ink); white-space: pre-wrap; margin-top: var(--space-1); }
+  .fb-chunk { font-size: var(--text-xs); color: var(--ink-2); white-space: pre-wrap; margin-top: var(--space-2); }
+  .fb-card summary { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-2); cursor: pointer; margin-top: var(--space-3); }
+  .fb-open { display: inline-block; margin-top: var(--space-3); font-size: var(--text-sm); color: var(--sage-deep); }
+</style>
+</head>
+<body>
+<div class="fb-wrap">
+  <a class="fb-back" href="dashboard.html">&larr; Back</a>
+  <h2>Downvoted answers</h2>
+  <p>Your latest thumbs-down answers, with the passages the answer was built from. If the right passage is missing, retrieval was the problem. If it is there, the prompt or model was.</p>
+  <div id="list"></div>
+</div>
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/feedback.js"></script>
+</body>
+</html>

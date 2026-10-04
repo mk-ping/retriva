@@ -1,4 +1,4 @@
-﻿import os
+import os
 import secrets
 from pathlib import Path
 
@@ -18,7 +18,7 @@ CHROMA_DIR = os.path.join(STORAGE_DIR, "chroma")
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(STORAGE_DIR, 'retriva.db')}")
 
 MAX_FILE_SIZE_MB = 25
-ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md", ".csv"}
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".xlsx", ".html", ".htm"}
 
 RETRIEVAL_TOP_K = 5
 
@@ -47,3 +47,8 @@ JWT_EXPIRE_MINUTES = 60 * 24 * 7
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(CHROMA_DIR, exist_ok=True)
+CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
+
+OCR_MAX_PAGES = int(os.getenv("OCR_MAX_PAGES", "50"))
+
+DAILY_MESSAGE_LIMIT = int(os.getenv("DAILY_MESSAGE_LIMIT", "100"))

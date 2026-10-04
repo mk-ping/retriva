@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -18,6 +18,10 @@
       <div class="corner-account-name" id="account-name">-</div>
       <div class="corner-account-email" id="account-email">-</div>
     </div>
+    <a class="account-menu-item" href="feedback.html">Review downvoted answers</a>
+    <button class="account-menu-item" id="export-data-btn">Export my data</button>
+    <button class="account-menu-item" id="change-pw-btn">Change password</button>
+    <button class="account-menu-item danger" id="delete-account-btn">Delete account</button>
     <button class="account-menu-item danger" id="sign-out-btn">Sign out</button>
   </div>
 </div>
@@ -40,8 +44,14 @@
 
   <main class="main" id="main">
     <div class="main-empty">
-      <h2>Select a knowledge base to start</h2>
-      <p>Choose one from the sidebar, or create a new one to upload documents and start asking questions.</p>
+      <h2>Upload a document, or pick a knowledge base</h2>
+      <p>Drop your files below to get started. You do not have to name anything first: a knowledge base is created for you, and you can rename it later. Or choose an existing one to add the files to.</p>
+      <select id="quick-target" class="quick-target"></select>
+      <div class="quick-upload" id="quick-upload">
+        <input type="file" id="quick-file-input" multiple accept=".pdf,.docx,.txt,.md,.csv,.pptx,.xlsx,.html,.htm" />
+        <div class="quick-title">Drop files or click to upload</div>
+        <div class="quick-sub">PDF, DOCX, PPTX, XLSX, HTML, TXT, MD, CSV - max 25MB each</div>
+      </div>
     </div>
   </main>
 
@@ -51,8 +61,8 @@
   <div class="modal">
     <h3>New knowledge base</h3>
     <div class="field">
-      <label for="kb-name-input">Name</label>
-      <input type="text" id="kb-name-input" />
+      <label for="kb-name-input">Name (optional)</label>
+      <input type="text" id="kb-name-input" placeholder="Untitled knowledge base - you can rename it later" />
     </div>
     <div class="field">
       <label for="kb-desc-input">Description (optional)</label>
@@ -65,6 +75,8 @@
   </div>
 </div>
 
+<script src="config.js"></script>
+<script src="js/dialogs.js"></script>
 <script src="js/api.js"></script>
 <script src="js/dashboard.js"></script>
 </body>

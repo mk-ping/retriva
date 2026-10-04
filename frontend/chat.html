@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -19,6 +19,10 @@
       <div class="corner-account-name" id="account-name">-</div>
       <div class="corner-account-email" id="account-email">-</div>
     </div>
+    <a class="account-menu-item" href="feedback.html">Review downvoted answers</a>
+    <button class="account-menu-item" id="export-data-btn">Export my data</button>
+    <button class="account-menu-item" id="change-pw-btn">Change password</button>
+    <button class="account-menu-item danger" id="delete-account-btn">Delete account</button>
     <button class="account-menu-item danger" id="sign-out-btn">Sign out</button>
   </div>
 </div>
@@ -45,6 +49,7 @@
         <div class="sidebar-kb-info">
           <h3 id="kb-name">Loading...</h3>
           <p id="kb-desc"></p>
+          <button class="kb-delete-btn kb-share-btn" id="rename-kb-btn">Rename</button> <button class="kb-delete-btn kb-share-btn" id="share-kb-btn">Share link</button> <button class="kb-delete-btn" id="delete-kb-btn">Delete knowledge base</button>
         </div>
 
         <div class="sidebar-search">
@@ -56,10 +61,11 @@
         <div class="sidebar-body">
           <div class="doc-list-label">Documents</div>
           <div class="upload-zone" id="upload-zone">
-            <input type="file" id="file-input" accept=".pdf,.docx,.txt,.md,.csv" multiple />
+            <input type="file" id="file-input" accept=".pdf,.docx,.txt,.md,.csv,.pptx,.xlsx,.html,.htm" multiple />
             <div class="upload-zone-title">Drop files or click to upload</div>
-            <div class="upload-zone-sub">PDF - DOCX - TXT - MD - CSV - max 25MB</div>
+            <div class="upload-zone-sub">PDF - DOCX - PPTX - XLSX - HTML - TXT - MD - CSV - max 25MB</div>
           </div>
+          <button class="btn btn-secondary add-url-btn" id="add-url-btn">+ Add web page</button>
           <div class="doc-list" id="doc-list">
             <div class="empty-doc-note">No documents yet.</div>
           </div>
@@ -76,12 +82,13 @@
     <div class="chat-pane">
       <div class="chat-topbar">
         <span class="chat-title" id="chat-title-label"></span>
-        <button class="btn btn-secondary inspector-btn" id="inspector-toggle-btn">Debug retrieval</button>
+        <div class="topbar-actions"><label class="all-kb-toggle"><input type="checkbox" id="all-kb-checkbox" /> All knowledge bases</label><button class="btn btn-secondary inspector-btn" id="export-chat-btn">Export</button><button class="btn btn-secondary inspector-btn" id="inspector-toggle-btn" title="Type a question to see which passages of your documents match it. Useful when an answer looks wrong.">Test search</button></div>
       </div>
 
       <div class="inspector-panel" id="inspector-panel">
+        <p class="inspector-help">Shows which passages of your documents match a question, before the AI writes anything. The percentage is how closely a passage matches (higher = closer). If the passage you expect is not listed, the answer will be weak: try different wording, or check the document has a green dot.</p>
         <div class="inspector-input-row">
-          <input type="text" id="inspector-query-input" placeholder="Test a query against this knowledge base..." />
+          <input type="text" id="inspector-query-input" placeholder="Type a question to see which passages match it..." />
           <button class="btn btn-secondary" id="inspector-run-btn">Run</button>
         </div>
         <div id="inspector-results"></div>
@@ -139,6 +146,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+<script src="config.js"></script>
+<script src="js/dialogs.js"></script>
 <script src="js/api.js"></script>
 <script src="js/chat.js"></script>
 </body>

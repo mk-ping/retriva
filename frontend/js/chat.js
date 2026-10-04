@@ -24,7 +24,7 @@ function escapeHtml(str) {
 
 function renderMarkdown(text) {
   const rawHtml = marked.parse(text, { breaks: true });
-  return DOMPurify.sanitize(rawHtml);
+  return addCitations(DOMPurify.sanitize(rawHtml));
 }
 
 // account corner menu
@@ -115,7 +115,7 @@ function renderDocList(docs) {
       <div class="doc-status-dot ${d.status}" title="${d.status}"></div>
       <div class="doc-item-text">
         <div class="doc-item-name">${escapeHtml(d.filename)}</div>
-        <div class="doc-item-meta">${d.status === "ready" ? d.chunk_count + " chunks" : d.status === "failed" ? escapeHtml(d.error_message || "Failed") : "Processing..."}</div>
+        <div class="doc-item-meta">${d.status === "ready" ? d.chunk_count + " passages" : d.status === "failed" ? escapeHtml(d.error_message || "Failed") : "Processing..."}</div>
       </div>
       <button class="doc-reprocess" data-doc-id="${d.id}" title="Reprocess">&#8635;</button>
       <button class="doc-delete" data-doc-id="${d.id}" title="Delete">&times;</button>
@@ -133,7 +133,7 @@ function renderDocList(docs) {
   list.querySelectorAll(".doc-delete").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      if (!confirm("Delete this document?")) return;
+      if (!await uiConfirm("Delete this document?")) return;
       try { await api.deleteDocument(kbId, btn.dataset.docId); loadKBDetails(); }
       catch (err) { alert(err.message); }
     });
@@ -151,7 +151,7 @@ async function handleFiles(files) {
       loadKBDetails();
     } catch (err) {
       if (err.message.includes("matches an existing document")) {
-        const proceed = confirm(`${err.message}\n\nUpload it anyway as a duplicate?`);
+        const proceed = await uiConfirm(`${err.message}\n\nUpload it anyway as a duplicate?`);
         if (proceed) {
           try {
             await api.uploadDocument(kbId, file, true);
@@ -216,7 +216,7 @@ function renderChatList() {
   list.querySelectorAll(".chat-delete").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      if (!confirm("Delete this chat?")) return;
+      if (!await uiConfirm("Delete this chat?")) return;
       try {
         await api.deleteChat(btn.dataset.chatId);
         if (currentChatId === btn.dataset.chatId) startNewChat();
@@ -303,11 +303,20 @@ function appendMessage(role, content, sources = [], messageId = null, feedback =
   const messages = document.getElementById("messages");
   const row = document.createElement("div");
   row.className = `msg-row ${role}`;
+  row._sources = sources;
 
   const bubble = document.createElement("div");
   bubble.className = "msg-bubble";
   bubble.innerHTML = renderMarkdown(content);
   row.appendChild(bubble);
+
+  if (role === "user") {
+    const editBtn = document.createElement("button");
+    editBtn.className = "msg-action-btn";
+    editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", () => editLastQuestion(row, content));
+    bubble.appendChild(editBtn);
+  }
 
   if (role === "assistant" && sources.length) {
     const srcWrap = document.createElement("div");
@@ -315,7 +324,8 @@ function appendMessage(role, content, sources = [], messageId = null, feedback =
     sources.forEach(s => {
       const chip = document.createElement("div");
       chip.className = "source-chip";
-      chip.innerHTML = `${escapeHtml(s.filename)}${s.page ? " · p." + s.page : ""} <span class="source-chip-score">${Math.round(s.score * 100)}%</span>`;
+      chip.title = "How closely this passage matches your question (higher = closer). It is a search score, not a guarantee that the answer is correct.";
+      chip.innerHTML = `${escapeHtml(s.filename)}${s.page ? " · p." + s.page : ""} <span class="source-chip-score">${Math.round(s.score * 100)}% match</span>`;
       chip.addEventListener("click", () => showSourceDetail(s));
       srcWrap.appendChild(chip);
     });
@@ -416,10 +426,18 @@ function showSourceDetail(source) {
     <div class="source-detail">
       <div class="source-detail-file">${escapeHtml(source.filename)}${source.page ? " · page " + source.page : ""}</div>
       <div class="source-detail-score">${Math.round(source.score * 100)}% match</div>
+      <div class="source-hint">How closely this passage matches your question. It is a search score, not a guarantee that the answer is correct.</div>
       <div class="source-detail-text">${escapeHtml(source.chunk_text)}</div>
     </div>
   `;
   panel.classList.add("open");
+  if (source.doc_id) {
+    const openBtn = document.createElement("button");
+    openBtn.className = "btn btn-secondary open-original-btn";
+    openBtn.textContent = source.page && /\.pdf$/i.test(source.filename) ? "Open original (page " + source.page + ")" : "Open original";
+    openBtn.addEventListener("click", () => openOriginal(source));
+    body.appendChild(openBtn);
+  }
 }
 
 document.getElementById("sources-panel-close").addEventListener("click", () => {
@@ -466,6 +484,7 @@ async function sendMessage() {
   let firstToken = true;
 
   try {
+    const wasNew = !currentChatId;
     const chatId = await ensureChat();
     const reader = await streamMessage(chatId, content, activeAbortController.signal);
     const decoder = new TextDecoder();
@@ -494,6 +513,7 @@ async function sendMessage() {
         if (data.done) {
           row.remove();
           appendMessage("assistant", fullText, data.sources || [], data.message_id, null);
+          if (wasNew) api.autoTitle(currentChatId).then(c => { document.getElementById("chat-title-label").textContent = c.title; loadChatList(); }).catch(() => {});
           loadChatList();
         }
       }
@@ -572,3 +592,209 @@ const targetChatId = params.get("chat");
 if (targetChatId) {
   setTimeout(() => openChat(targetChatId), 500);
 }
+
+// clicking an inline [n] opens that source in the side panel
+document.getElementById("messages").addEventListener("click", (e) => {
+  const c = e.target.closest(".cite");
+  if (!c) return;
+  const row = c.closest(".msg-row");
+  const s = row && row._sources && row._sources[Number(c.dataset.n) - 1];
+  if (s) showSourceDetail(s);
+});
+// delete the whole knowledge base (documents, chats and vectors) after a confirmation
+document.getElementById("delete-kb-btn").addEventListener("click", async () => {
+  const name = currentKB ? currentKB.name : "this knowledge base";
+  if (!await uiConfirm(`Delete "${name}" and everything in it?\n\nThis removes all its documents and chats and cannot be undone.`)) return;
+  try {
+    await api.deleteKB(kbId);
+    window.location.href = "dashboard.html";
+  } catch (err) {
+    alert(err.message);
+  }
+});
+// turns [n] into clickable markers, but skips code and pre blocks
+function addCitations(html) {
+  const tpl = document.createElement("template");
+  tpl.innerHTML = html;
+  const walker = document.createTreeWalker(tpl.content, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(n => {
+    if (n.parentElement && n.parentElement.closest("code, pre")) return;
+    if (!/\[\d{1,2}\]/.test(n.nodeValue)) return;
+    const frag = document.createDocumentFragment();
+    n.nodeValue.split(/(\[\d{1,2}\])/).forEach(part => {
+      const m = part.match(/^\[(\d{1,2})\]$/);
+      if (m) {
+        const s = document.createElement("sup");
+        s.className = "cite";
+        s.dataset.n = m[1];
+        s.textContent = part;
+        frag.appendChild(s);
+      } else {
+        frag.appendChild(document.createTextNode(part));
+      }
+    });
+    n.replaceWith(frag);
+  });
+  return tpl.innerHTML;
+}
+
+// edit the latest question: removes that turn from the server, puts the text back in the input
+async function editLastQuestion(row, text) {
+  const rows = Array.from(document.querySelectorAll("#messages .msg-row.user"));
+  if (rows[rows.length - 1] !== row) { alert("You can only edit your latest question."); return; }
+  if (!currentChatId) return;
+  try { await api.deleteLastTurn(currentChatId); } catch (err) { alert(err.message); return; }
+  while (row.nextSibling) row.nextSibling.remove();
+  row.remove();
+  chatInput.value = text;
+  chatInput.style.height = "auto";
+  chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + "px";
+  chatInput.focus();
+  loadChatList();
+}
+
+// double-click the knowledge base name in the sidebar to rename it
+document.getElementById("kb-name").addEventListener("dblclick", async () => {
+  if (!currentKB) return;
+  const name = await uiPrompt("Knowledge base name:", currentKB.name);
+  if (!name || !name.trim()) return;
+  const desc = await uiPrompt("Description (optional):", currentKB.description || "");
+  if (desc === null) return;
+  try { await api.updateKB(kbId, name.trim(), desc); loadKBDetails(); } catch (err) { alert(err.message); }
+});
+
+// suggested questions inside the empty chat screen
+let _sugBusy = false;
+async function loadSuggestions() {
+  const empty = document.querySelector("#messages .chat-empty");
+  if (!empty || empty.querySelector(".suggestions") || _sugBusy) return;
+  _sugBusy = true;
+  try {
+    const data = await apiRequest(`/api/chats/suggestions/${kbId}`);
+    const again = document.querySelector("#messages .chat-empty");
+    if (!again || !data.questions.length || again.querySelector(".suggestions")) return;
+    const wrap = document.createElement("div");
+    wrap.className = "suggestions";
+    data.questions.forEach(q => {
+      const b = document.createElement("button");
+      b.className = "suggestion-chip";
+      b.textContent = q;
+      b.addEventListener("click", () => { chatInput.value = q; sendMessage(); });
+      wrap.appendChild(b);
+    });
+    again.appendChild(wrap);
+  } catch (e) { /* suggestions are optional */ } finally { _sugBusy = false; }
+}
+new MutationObserver(loadSuggestions).observe(document.getElementById("messages"), { childList: true });
+loadSuggestions();
+
+// opens the stored original: PDFs at the cited page, text-like files in a tab, Office files as a download
+async function openOriginal(source) {
+  const isPdf = /\.pdf$/i.test(source.filename);
+  const viewable = /\.(pdf|txt|md|csv|html?)$/i.test(source.filename);
+  const win = viewable ? window.open("", "_blank") : null;  // opened first so popup blockers allow it
+  try {
+    const res = await fetch(`${API_BASE}/api/knowledge-bases/${source.kb_id || kbId}/documents/${source.doc_id}/file`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || `Request failed (${res.status})`);
+    }
+    const url = URL.createObjectURL(await res.blob());
+    if (win) {
+      win.location.href = url + (isPdf && source.page ? "#page=" + source.page : "");
+    } else {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = source.filename;
+      a.click();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (err) {
+    if (win) win.close();
+    alert(err.message);
+  }
+}
+
+// add a web page by address
+document.getElementById("add-url-btn").addEventListener("click", async () => {
+  const url = await uiPrompt("Web page address (https://...):");
+  if (!url || !url.trim()) return;
+  try {
+    await apiRequest(`/api/knowledge-bases/${kbId}/documents/url`, { method: "POST", body: JSON.stringify({ url: url.trim() }) });
+    loadKBDetails();
+  } catch (err) { alert(err.message); }
+});
+
+// export the open chat as a Markdown file
+document.getElementById("export-chat-btn").addEventListener("click", async () => {
+  if (!currentChatId) { alert("Open a chat first."); return; }
+  try {
+    const chat = await api.getChat(currentChatId);
+    let md = "# " + chat.title + "\n\n";
+    chat.messages.forEach(m => {
+      md += (m.role === "user" ? "**You:** " : "**Retriva:** ") + m.content + "\n\n";
+      if (m.role === "assistant" && m.sources && m.sources.length) {
+        const seen = [];
+        m.sources.forEach(s => {
+          const label = s.filename + (s.page ? " p." + s.page : "");
+          if (!seen.includes(label)) seen.push(label);
+        });
+        md += "_Sources: " + seen.join("; ") + "_\n\n";
+      }
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
+    a.download = (chat.title || "chat").replace(/[^a-z0-9]+/gi, "-").slice(0, 50) + ".md";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch (err) { alert(err.message); }
+});
+
+// "All knowledge bases" switch: remembered for this browser tab
+const _allKb = document.getElementById("all-kb-checkbox");
+if (_allKb) {
+  _allKb.checked = sessionStorage.getItem("retriva_search_all") === "1";
+  window.RETRIVA_SEARCH_ALL = _allKb.checked;
+  _allKb.addEventListener("change", () => {
+    window.RETRIVA_SEARCH_ALL = _allKb.checked;
+    sessionStorage.setItem("retriva_search_all", _allKb.checked ? "1" : "0");
+  });
+}
+
+// create, copy or stop a public read-only link for this knowledge base
+document.getElementById("share-kb-btn").addEventListener("click", async () => {
+  try {
+    let info = await apiRequest(`/api/share/kb/${kbId}`);
+    if (!info.token) {
+      if (!await uiConfirm("Create a public link?\n\nAnyone with the link can ask questions about ALL documents in this knowledge base and read the passages used in answers, without signing in. They cannot download your files. Their questions use this app's AI quota. You can stop sharing at any time.")) return;
+      info = await apiRequest(`/api/share/kb/${kbId}`, { method: "POST" });
+    }
+    const url = new URL("share.html?t=" + info.token, window.location.href).href;
+    try { await navigator.clipboard.writeText(url); } catch (e) { /* copy manually from the box */ }
+    const answer = await uiPrompt("Share link (copied if your browser allows).\n\nTo STOP sharing: replace the text below with REVOKE and press OK.", url);
+    if (answer && answer.trim().toUpperCase() === "REVOKE") {
+      await apiRequest(`/api/share/kb/${kbId}`, { method: "DELETE" });
+      alert("Sharing stopped. The old link no longer works.");
+    }
+  } catch (err) { alert(err.message); }
+});
+
+// on phones the sidebar starts closed and closes again after you pick a chat
+(function () {
+  const mobile = () => window.matchMedia("(max-width: 700px)").matches;
+  const sb = document.getElementById("main-sidebar");
+  if (sb && mobile()) sb.classList.add("collapsed");
+  const list = document.getElementById("chat-list");
+  if (list) list.addEventListener("click", (e) => {
+    if (mobile() && e.target.closest(".chat-list-item") && !e.target.closest(".chat-delete")) sb.classList.add("collapsed");
+  });
+})();
+
+// visible Rename button: reuses the double-click rename
+document.getElementById("rename-kb-btn").addEventListener("click", () => {
+  document.getElementById("kb-name").dispatchEvent(new Event("dblclick"));
+});

@@ -612,3 +612,69 @@
 .chat-topbar {
   padding-right: 76px;
 }
+
+.cite { color: var(--sage-deep); cursor: pointer; font-family: var(--font-mono); font-size: 0.7em; font-weight: 500; padding: 0 1px; }
+.cite:hover { text-decoration: underline; }
+.kb-delete-btn {
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-3);
+  padding: 2px 0;
+  transition: color 0.15s var(--ease);
+}
+.kb-delete-btn:hover { color: var(--danger); }
+
+.suggestions { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-4); max-width: 420px; }
+.suggestion-chip {
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s var(--ease), color 0.15s var(--ease);
+}
+.suggestion-chip:hover { border-color: var(--sage-deep); color: var(--ink); }
+.msg-row.user .msg-action-btn { color: rgba(255,255,255,0.55); margin-top: var(--space-2); display: block; }
+.msg-row.user .msg-action-btn:hover { color: #fff; background: rgba(255,255,255,0.12); }
+#kb-name { cursor: text; }
+.open-original-btn { align-self: flex-start; }
+
+
+.topbar-actions { display: flex; gap: var(--space-2); }
+.add-url-btn { margin: var(--space-2) var(--space-4) 0; width: calc(100% - var(--space-4) * 2); font-size: var(--text-xs); }
+
+.all-kb-toggle { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-2); cursor: pointer; }
+.all-kb-toggle input { accent-color: var(--sage-deep); }
+.kb-share-btn { margin-right: var(--space-3); }
+.kb-share-btn:hover { color: var(--sage-deep); }
+
+
+@media (max-width: 700px) {
+  .sidebar { position: absolute; top: 0; bottom: 0; left: 0; z-index: 15; box-shadow: 8px 0 24px rgba(0,0,0,0.12); }
+  .sidebar.collapsed { box-shadow: none; }
+  .chat-topbar { padding-left: 56px; padding-right: 60px; gap: var(--space-2); flex-wrap: wrap; }
+  .topbar-actions { flex-wrap: wrap; }
+  .messages { padding: var(--space-4); }
+  .chat-input-bar { padding: var(--space-3) var(--space-4); }
+  .msg-row { max-width: 100%; }
+  .sources-panel { width: 100%; }
+}
+
+/* ---- batch 10: top bar and toggle fixes ---- */
+.chat-topbar { gap: var(--space-3); transition: padding-left 0.2s var(--ease); }
+.sidebar.collapsed + .chat-pane .chat-topbar { padding-left: 64px; }   /* room for the menu button when the sidebar is closed */
+.chat-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-actions { flex-shrink: 0; align-items: center; }
+.chat-topbar .btn { padding: 6px 12px; }                               /* compact buttons, level with the menu button */
+.sources-panel-header { padding-right: 72px; }                         /* keeps the close button clear of the avatar */
+
+@media (max-width: 700px) {
+  .chat-title { flex-basis: 100%; }                                    /* title gets its own row on phones */
+  .chat-topbar .btn { padding: 5px 10px; }
+}
+
+.inspector-help { font-size: var(--text-xs); color: var(--ink-2); line-height: 1.6; }
+.source-hint { font-size: var(--text-xs); color: var(--ink-3); line-height: 1.5; margin-bottom: var(--space-3); }

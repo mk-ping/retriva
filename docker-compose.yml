@@ -24,7 +24,7 @@ services:
       - ./backend/app:/app
       - retriva_storage:/app/storage
       # reuses the embedding model you already downloaded, so the container doesn't download it again
-      - C:/Users/Mehak/.cache/chroma:/root/.cache/chroma
+      - chroma_cache:/root/.cache/chroma
     env_file:
       - .env
     environment:
@@ -48,3 +48,4 @@ services:
 volumes:
   retriva_storage:
   postgres_data:
+  chroma_cache:

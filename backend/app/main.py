@@ -2,13 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import init_db, SessionLocal, Document
-from routers import knowledge_bases, chat, auth
+from routers import knowledge_bases, chat, auth, share
+from config import CORS_ORIGINS
 
 app = FastAPI(title="Retriva API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: set to your real frontend origin in production
+    allow_origins=CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -16,6 +17,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(knowledge_bases.router)
 app.include_router(chat.router)
+app.include_router(share.router)
 
 
 @app.on_event("startup")
@@ -36,4 +38,14 @@ def root():
 
 @app.get("/api/health")
 def health():
+    return _health()
+
+def _health():
+    from fastapi import HTTPException
+    from sqlalchemy import text
+    try:
+        with SessionLocal() as db:
+            db.execute(text("select 1"))
+    except Exception:
+        raise HTTPException(status_code=503, detail="database unavailable")
     return {"status": "ok"}

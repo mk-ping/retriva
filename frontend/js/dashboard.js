@@ -1,4 +1,4 @@
-﻿let currentKBs = [];
+let currentKBs = [];
 let activeKBId = null;
 
 function initials(name) {
@@ -66,6 +66,7 @@ function renderKBList() {
 async function loadKBs() {
   try {
     currentKBs = await api.listKBs();
+    fillQuickTarget();
     renderKBList();
   } catch (err) {
     document.getElementById("kb-list").innerHTML = `<div class="empty-kb-note">Failed to load: ${err.message}</div>`;
@@ -96,7 +97,7 @@ modal.addEventListener("click", (e) => {
 });
 
 document.getElementById("kb-modal-create").addEventListener("click", async () => {
-  const name = document.getElementById("kb-name-input").value.trim();
+  const name = document.getElementById("kb-name-input").value.trim() || "Untitled knowledge base";
   const description = document.getElementById("kb-desc-input").value.trim();
   if (!name) return;
 
@@ -150,3 +151,62 @@ async function runSearch(q) {
 
 renderAccount();
 loadKBs();
+
+
+// ---- quick upload: drop files first, the knowledge base is created or chosen for you ----
+function fillQuickTarget() {
+  const sel = document.getElementById("quick-target");
+  if (!sel) return;
+  const keep = sel.value;
+  sel.innerHTML = "";
+  const first = document.createElement("option");
+  first.value = "";
+  first.textContent = "New knowledge base (named after your file)";
+  sel.appendChild(first);
+  currentKBs.forEach(kb => {
+    const o = document.createElement("option");
+    o.value = kb.id;
+    o.textContent = "Add to: " + kb.name;   // textContent, so names can never run as HTML
+    sel.appendChild(o);
+  });
+  if (keep && currentKBs.some(k => k.id === keep)) sel.value = keep;
+}
+
+async function quickUpload(fileList) {
+  const files = Array.from(fileList);
+  if (!files.length) return;
+  const zone = document.getElementById("quick-upload");
+  const title = zone.querySelector(".quick-title");
+  const original = title.textContent;
+  zone.classList.add("busy");
+  title.textContent = "Uploading " + files.length + " file" + (files.length === 1 ? "" : "s") + "...";
+  try {
+    let targetId = document.getElementById("quick-target").value;
+    if (!targetId) {
+      const base = files[0].name.replace(/\.[^.]+$/, "").trim().slice(0, 50) || "Untitled";
+      const name = files.length > 1 ? base + " +" + (files.length - 1) + " more" : base;
+      targetId = (await api.createKB(name, "")).id;
+    }
+    const failed = [];
+    for (const f of files) {
+      try { await api.uploadDocument(targetId, f); }
+      catch (err) { failed.push(f.name + ": " + err.message); }
+    }
+    if (failed.length) {
+      alert(failed.join("\n"));
+      await new Promise(r => setTimeout(r, 3000));   // let the message be read before leaving
+    }
+    window.location.href = "chat.html?kb=" + targetId;
+  } catch (err) {
+    alert(err.message);
+    zone.classList.remove("busy");
+    title.textContent = original;
+  }
+}
+
+const _qz = document.getElementById("quick-upload");
+const _qi = document.getElementById("quick-file-input");
+_qi.addEventListener("change", () => { quickUpload(_qi.files); _qi.value = ""; });
+_qz.addEventListener("dragover", (e) => { e.preventDefault(); _qz.classList.add("drag-over"); });
+_qz.addEventListener("dragleave", () => _qz.classList.remove("drag-over"));
+_qz.addEventListener("drop", (e) => { e.preventDefault(); _qz.classList.remove("drag-over"); quickUpload(e.dataTransfer.files); });

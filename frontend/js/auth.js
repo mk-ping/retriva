@@ -79,3 +79,8 @@ document.getElementById("form-signup").addEventListener("submit", async (e) => {
 if (getToken()) {
   window.location.href = "dashboard.html";
 }
+
+
+// tab buttons (these used inline onclick attributes, which a strict CSP blocks)
+document.getElementById("tab-login").addEventListener("click", () => switchTab("login"));
+document.getElementById("tab-signup").addEventListener("click", () => switchTab("signup"));

@@ -1,0 +1,8 @@
+[
+  {
+    "kb": "YOUR KNOWLEDGE BASE NAME",
+    "question": "A question your document can answer",
+    "expect_file": "part of the file name.pdf",
+    "expect_text": "a word or phrase that must appear in the right passage"
+  }
+]

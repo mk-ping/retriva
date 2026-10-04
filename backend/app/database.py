@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from datetime import datetime
 
 from sqlalchemy import create_engine, Column, String, DateTime, Integer, ForeignKey, Text
@@ -40,6 +40,7 @@ class KnowledgeBase(Base):
     owner = relationship("User", back_populates="knowledge_bases")
     documents = relationship("Document", back_populates="knowledge_base", cascade="all, delete-orphan")
     chats = relationship("Chat", back_populates="knowledge_base", cascade="all, delete-orphan")
+    share_links = relationship("ShareLink", cascade="all, delete-orphan")
 
 
 class Document(Base):
@@ -89,6 +90,15 @@ class Message(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     chat = relationship("Chat", back_populates="messages")
+
+
+class ShareLink(Base):
+    __tablename__ = "share_links"
+
+    id = Column(String, primary_key=True, default=new_id)
+    knowledge_base_id = Column(String, ForeignKey("knowledge_bases.id"), nullable=False, index=True)
+    token = Column(String, nullable=False, unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 def init_db():

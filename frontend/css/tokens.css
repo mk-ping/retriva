@@ -163,3 +163,14 @@ code, .mono { font-family: var(--font-mono); }
   background: var(--line);
   border: none;
 }
+
+
+#toast-box { position: fixed; bottom: var(--space-5); left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: var(--space-2); align-items: center; width: calc(100% - 32px); max-width: 420px; pointer-events: none; }
+.toast { pointer-events: auto; cursor: pointer; background: var(--ink); color: var(--bg); font-size: var(--text-sm); padding: 10px 16px; border-radius: var(--radius-md); box-shadow: 0 8px 24px rgba(43,42,39,0.2); white-space: pre-wrap; }
+
+.ui-overlay { position: fixed; inset: 0; background: rgba(43,42,39,0.35); display: flex; align-items: center; justify-content: center; z-index: 300; padding: var(--space-4); }
+.ui-dialog { background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-5); width: 100%; max-width: 440px; box-shadow: 0 16px 48px rgba(43,42,39,0.2); }
+.ui-msg { font-size: var(--text-sm); color: var(--ink); white-space: pre-wrap; word-break: break-word; line-height: 1.6; }
+.ui-input { width: 100%; margin-top: var(--space-3); padding: 10px 12px; border: 1px solid var(--line-2); border-radius: var(--radius-md); background: var(--bg); color: var(--ink); outline: none; }
+.ui-input:focus { border-color: var(--sage-deep); }
+.ui-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-5); }

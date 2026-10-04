@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = window.RETRIVA_API || "http://localhost:8000";
 
 function getToken() {
   return localStorage.getItem("retriva_token");
@@ -71,9 +71,12 @@ const api = {
   getChat: (chatId) => apiRequest(`/api/chats/${chatId}`),
   renameChat: (chatId, title) =>
     apiRequest(`/api/chats/${chatId}`, { method: "PATCH", body: JSON.stringify({ title }) }),
+  deleteLastTurn: (chatId) => apiRequest(`/api/chats/${chatId}/last-turn`, { method: "DELETE" }),
+  autoTitle: (chatId) => apiRequest(`/api/chats/${chatId}/title`, { method: "POST" }),
+  updateKB: (kbId, name, description) => apiRequest(`/api/knowledge-bases/${kbId}`, { method: "PATCH", body: JSON.stringify({ name, description }) }),
   deleteChat: (chatId) => apiRequest(`/api/chats/${chatId}`, { method: "DELETE" }),
   sendMessage: (chatId, content, regenerate = false) =>
-    apiRequest(`/api/chats/${chatId}/messages`, { method: "POST", body: JSON.stringify({ content, regenerate }) }),
+    apiRequest(`/api/chats/${chatId}/messages`, { method: "POST", body: JSON.stringify({ content, regenerate, search_all: window.RETRIVA_SEARCH_ALL === true }) }),
 };
 
 async function streamMessage(chatId, content, signal) {
@@ -81,7 +84,7 @@ async function streamMessage(chatId, content, signal) {
   const res = await fetch(`${API_BASE}/api/chats/${chatId}/messages/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, search_all: window.RETRIVA_SEARCH_ALL === true }),
     signal,
   });
   if (!res.ok) {
@@ -90,3 +93,62 @@ async function streamMessage(chatId, content, signal) {
   }
   return res.body.getReader();
 }
+
+// change password from the account menu
+const _cpBtn = document.getElementById("change-pw-btn");
+if (_cpBtn) _cpBtn.addEventListener("click", async () => {
+  const current = await uiPrompt("Current password:");
+  if (!current) return;
+  const next = await uiPrompt("New password (at least 8 characters):");
+  if (!next) return;
+  try {
+    await apiRequest("/api/auth/change-password", { method: "POST", body: JSON.stringify({ current_password: current, new_password: next }) });
+    alert("Password changed.");
+  } catch (err) { alert(err.message); }
+});
+
+// export all my data as a JSON file
+const _exBtn = document.getElementById("export-data-btn");
+if (_exBtn) _exBtn.addEventListener("click", async () => {
+  try {
+    const data = await apiRequest("/api/auth/export");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    a.download = "retriva-my-data.json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch (err) { alert(err.message); }
+});
+
+// permanently delete my account and everything in it
+const _delBtn = document.getElementById("delete-account-btn");
+if (_delBtn) _delBtn.addEventListener("click", async () => {
+  if (!await uiConfirm("Delete your account?\n\nThis permanently removes all your knowledge bases, documents and chats. It cannot be undone.\n\nTip: use Export my data first.")) return;
+  const password = await uiPrompt("Type your password to confirm:");
+  if (!password) return;
+  try {
+    await apiRequest("/api/auth/delete-account", { method: "POST", body: JSON.stringify({ password }) });
+    clearToken();
+    localStorage.removeItem("retriva_user");
+    alert("Your account has been deleted.");
+    window.location.href = "index.html";
+  } catch (err) { alert(err.message); }
+});
+
+// replaces the browser's blocking alert() with a toast
+window.alert = function (message) {
+  let box = document.getElementById("toast-box");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "toast-box";
+    box.setAttribute("role", "status");
+    box.setAttribute("aria-live", "polite");
+    document.body.appendChild(box);
+  }
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = String(message);
+  box.appendChild(t);
+  setTimeout(() => t.remove(), 5000);
+  t.addEventListener("click", () => t.remove());
+};
