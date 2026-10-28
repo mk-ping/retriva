@@ -41,29 +41,3 @@ def test_friendly_errors():
     assert "damaged" in _friendly_error(zipfile.BadZipFile("File is not a zip file"), ".docx")
     assert "password" in _friendly_error(Exception("File has not been decrypted"), ".pdf").lower()
 
-
-def test_move_document_between_knowledge_bases(client, user_a, user_b):
-    from database import SessionLocal, Document
-    from config import UPLOAD_DIR
-    a = client.post("/api/knowledge-bases", json={"name": "A"}, headers=user_a).json()
-    b = client.post("/api/knowledge-bases", json={"name": "B"}, headers=user_a).json()
-    theirs = client.post("/api/knowledge-bases", json={"name": "Theirs"}, headers=user_b).json()
-
-    os.makedirs(os.path.join(UPLOAD_DIR, a["id"]), exist_ok=True)
-    with SessionLocal() as db:
-        d = Document(knowledge_base_id=a["id"], filename="n.txt", file_type=".txt",
-                     file_size_bytes=2, file_hash="h1", status="ready")
-        db.add(d)
-        db.commit()
-        doc_id = d.id
-    with open(os.path.join(UPLOAD_DIR, a["id"], doc_id + ".txt"), "w") as f:
-        f.write("hi")
-
-    url = "/api/knowledge-bases/" + a["id"] + "/documents/" + doc_id + "/move"
-    assert client.post(url, json={"target_kb_id": theirs["id"]}, headers=user_a).status_code == 404  # not mine
-    assert client.post(url, json={"target_kb_id": a["id"]}, headers=user_a).status_code == 400       # same one
-    assert client.post(url, json={"target_kb_id": b["id"]}, headers=user_a).status_code == 200
-
-    assert [x["filename"] for x in client.get("/api/knowledge-bases/" + b["id"], headers=user_a).json()["documents"]] == ["n.txt"]
-    assert client.get("/api/knowledge-bases/" + a["id"], headers=user_a).json()["documents"] == []
-    assert os.path.exists(os.path.join(UPLOAD_DIR, b["id"], doc_id + ".txt"))

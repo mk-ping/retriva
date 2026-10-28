@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import init_db, SessionLocal, Document
-from routers import knowledge_bases, chat, auth, share
+from routers import knowledge_bases, chat, auth
 from config import CORS_ORIGINS
 
 app = FastAPI(title="Retriva API")
@@ -17,7 +17,6 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(knowledge_bases.router)
 app.include_router(chat.router)
-app.include_router(share.router)
 
 
 @app.on_event("startup")

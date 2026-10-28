@@ -117,7 +117,6 @@ function renderDocList(docs) {
         <div class="doc-item-name">${escapeHtml(d.filename)}</div>
         <div class="doc-item-meta">${d.status === "ready" ? d.chunk_count + " passages" : d.status === "failed" ? escapeHtml(d.error_message || "Failed") : "Processing..."}</div>
       </div>
-      <button class="doc-move" data-doc-id="${d.id}" title="Move to another knowledge base">&#8594;</button>
       <button class="doc-reprocess" data-doc-id="${d.id}" title="Reprocess">&#8635;</button>
       <button class="doc-delete" data-doc-id="${d.id}" title="Delete">&times;</button>
     </div>
@@ -145,28 +144,6 @@ function renderDocList(docs) {
 const uploadZone = document.getElementById("upload-zone");
 const fileInput = document.getElementById("file-input");
 
-async function handleFiles(files) {
-  for (const file of Array.from(files)) {
-    try {
-      await api.uploadDocument(kbId, file);
-      loadKBDetails();
-    } catch (err) {
-      if (err.message.includes("matches an existing document")) {
-        const proceed = await uiConfirm(`${err.message}\n\nUpload it anyway as a duplicate?`);
-        if (proceed) {
-          try {
-            await api.uploadDocument(kbId, file, true);
-            loadKBDetails();
-          } catch (err2) {
-            alert(`${file.name}: ${err2.message}`);
-          }
-        }
-      } else {
-        alert(`${file.name}: ${err.message}`);
-      }
-    }
-  }
-}
 
 fileInput.addEventListener("change", () => { handleFiles(fileInput.files); fileInput.value = ""; });
 uploadZone.addEventListener("dragover", (e) => { e.preventDefault(); uploadZone.classList.add("drag-over"); });
@@ -720,15 +697,6 @@ async function openOriginal(source) {
   }
 }
 
-// add a web page by address
-document.getElementById("add-url-btn").addEventListener("click", async () => {
-  const url = await uiPrompt("Web page address (https://...):");
-  if (!url || !url.trim()) return;
-  try {
-    await apiRequest(`/api/knowledge-bases/${kbId}/documents/url`, { method: "POST", body: JSON.stringify({ url: url.trim() }) });
-    loadKBDetails();
-  } catch (err) { alert(err.message); }
-});
 
 // export the open chat as a Markdown file
 document.getElementById("export-chat-btn").addEventListener("click", async () => {
@@ -766,23 +734,6 @@ if (_allKb) {
   });
 }
 
-// create, copy or stop a public read-only link for this knowledge base
-document.getElementById("share-kb-btn").addEventListener("click", async () => {
-  try {
-    let info = await apiRequest(`/api/share/kb/${kbId}`);
-    if (!info.token) {
-      if (!await uiConfirm("Create a public link?\n\nAnyone with the link can ask questions about ALL documents in this knowledge base and read the passages used in answers, without signing in. They cannot download your files. Their questions use this app's AI quota. You can stop sharing at any time.")) return;
-      info = await apiRequest(`/api/share/kb/${kbId}`, { method: "POST" });
-    }
-    const url = new URL("share.html?t=" + info.token, window.location.href).href;
-    try { await navigator.clipboard.writeText(url); } catch (e) { /* copy manually from the box */ }
-    const answer = await uiPrompt("Share link (copied if your browser allows).\n\nTo STOP sharing: replace the text below with REVOKE and press OK.", url);
-    if (answer && answer.trim().toUpperCase() === "REVOKE") {
-      await apiRequest(`/api/share/kb/${kbId}`, { method: "DELETE" });
-      alert("Sharing stopped. The old link no longer works.");
-    }
-  } catch (err) { alert(err.message); }
-});
 
 // on phones the sidebar starts closed and closes again after you pick a chat
 (function () {
@@ -955,59 +906,6 @@ loadKBDetails = async function () {
   });
 };
 
-// ---- move a document to another knowledge base ----
-function pickKnowledgeBase(kbs) {
-  return new Promise((resolve) => {
-    const overlay = document.createElement("div");
-    overlay.className = "ui-overlay";
-    const box = document.createElement("div");
-    box.className = "ui-dialog";
-    box.setAttribute("role", "dialog");
-    const msg = document.createElement("div");
-    msg.className = "ui-msg";
-    msg.textContent = "Move this document to:";
-    const sel = document.createElement("select");
-    sel.className = "ui-input";
-    kbs.forEach(k => { const o = document.createElement("option"); o.value = k.id; o.textContent = k.name; sel.appendChild(o); });
-    const row = document.createElement("div");
-    row.className = "ui-actions";
-    const cancel = document.createElement("button");
-    cancel.className = "btn btn-secondary";
-    cancel.textContent = "Cancel";
-    const ok = document.createElement("button");
-    ok.className = "btn btn-primary";
-    ok.textContent = "Move";
-    row.append(cancel, ok);
-    box.append(msg, sel, row);
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-    const close = (v) => { document.removeEventListener("keydown", onKey, true); overlay.remove(); resolve(v); };
-    const onKey = (e) => { if (e.key === "Escape") close(null); };
-    document.addEventListener("keydown", onKey, true);
-    ok.addEventListener("click", () => close(sel.value));
-    cancel.addEventListener("click", () => close(null));
-    overlay.addEventListener("mousedown", (e) => { if (e.target === overlay) close(null); });
-    sel.focus();
-  });
-}
-
-document.getElementById("doc-list").addEventListener("click", async (e) => {
-  const btn = e.target.closest(".doc-move");
-  if (!btn) return;
-  e.stopPropagation();
-  try {
-    const kbs = (await api.listKBs()).filter(k => k.id !== kbId);
-    if (!kbs.length) { alert("Create another knowledge base first, then you can move documents into it."); return; }
-    const target = await pickKnowledgeBase(kbs);
-    if (!target) return;
-    await apiRequest(`/api/knowledge-bases/${kbId}/documents/${btn.dataset.docId}/move`, {
-      method: "POST",
-      body: JSON.stringify({ target_kb_id: target }),
-    });
-    alert("Document moved.");
-    loadKBDetails();
-  } catch (err) { alert(err.message); }
-});
 
 // ---- uploads with a real progress bar (replaces the earlier handleFiles) ----
 const UPLOAD_EXTS = [".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".xlsx", ".html", ".htm"];
