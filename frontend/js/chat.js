@@ -117,6 +117,7 @@ function renderDocList(docs) {
         <div class="doc-item-name">${escapeHtml(d.filename)}</div>
         <div class="doc-item-meta">${d.status === "ready" ? d.chunk_count + " passages" : d.status === "failed" ? escapeHtml(d.error_message || "Failed") : "Processing..."}</div>
       </div>
+      <button class="doc-move" data-doc-id="${d.id}" title="Move to another knowledge base">&#8594;</button>
       <button class="doc-reprocess" data-doc-id="${d.id}" title="Reprocess">&#8635;</button>
       <button class="doc-delete" data-doc-id="${d.id}" title="Delete">&times;</button>
     </div>
@@ -144,6 +145,28 @@ function renderDocList(docs) {
 const uploadZone = document.getElementById("upload-zone");
 const fileInput = document.getElementById("file-input");
 
+async function handleFiles(files) {
+  for (const file of Array.from(files)) {
+    try {
+      await api.uploadDocument(kbId, file);
+      loadKBDetails();
+    } catch (err) {
+      if (err.message.includes("matches an existing document")) {
+        const proceed = await uiConfirm(`${err.message}\n\nUpload it anyway as a duplicate?`);
+        if (proceed) {
+          try {
+            await api.uploadDocument(kbId, file, true);
+            loadKBDetails();
+          } catch (err2) {
+            alert(`${file.name}: ${err2.message}`);
+          }
+        }
+      } else {
+        alert(`${file.name}: ${err.message}`);
+      }
+    }
+  }
+}
 
 fileInput.addEventListener("change", () => { handleFiles(fileInput.files); fileInput.value = ""; });
 uploadZone.addEventListener("dragover", (e) => { e.preventDefault(); uploadZone.classList.add("drag-over"); });
@@ -697,6 +720,15 @@ async function openOriginal(source) {
   }
 }
 
+// add a web page by address
+document.getElementById("add-url-btn").addEventListener("click", async () => {
+  const url = await uiPrompt("Web page address (https://...):");
+  if (!url || !url.trim()) return;
+  try {
+    await apiRequest(`/api/knowledge-bases/${kbId}/documents/url`, { method: "POST", body: JSON.stringify({ url: url.trim() }) });
+    loadKBDetails();
+  } catch (err) { alert(err.message); }
+});
 
 // export the open chat as a Markdown file
 document.getElementById("export-chat-btn").addEventListener("click", async () => {
@@ -734,6 +766,23 @@ if (_allKb) {
   });
 }
 
+// create, copy or stop a public read-only link for this knowledge base
+document.getElementById("share-kb-btn").addEventListener("click", async () => {
+  try {
+    let info = await apiRequest(`/api/share/kb/${kbId}`);
+    if (!info.token) {
+      if (!await uiConfirm("Create a public link?\n\nAnyone with the link can ask questions about ALL documents in this knowledge base and read the passages used in answers, without signing in. They cannot download your files. Their questions use this app's AI quota. You can stop sharing at any time.")) return;
+      info = await apiRequest(`/api/share/kb/${kbId}`, { method: "POST" });
+    }
+    const url = new URL("share.html?t=" + info.token, window.location.href).href;
+    try { await navigator.clipboard.writeText(url); } catch (e) { /* copy manually from the box */ }
+    const answer = await uiPrompt("Share link (copied if your browser allows).\n\nTo STOP sharing: replace the text below with REVOKE and press OK.", url);
+    if (answer && answer.trim().toUpperCase() === "REVOKE") {
+      await apiRequest(`/api/share/kb/${kbId}`, { method: "DELETE" });
+      alert("Sharing stopped. The old link no longer works.");
+    }
+  } catch (err) { alert(err.message); }
+});
 
 // on phones the sidebar starts closed and closes again after you pick a chat
 (function () {
@@ -907,101 +956,4 @@ loadKBDetails = async function () {
 };
 
 
-// ---- uploads with a real progress bar (replaces the earlier handleFiles) ----
-const UPLOAD_EXTS = [".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".xlsx", ".html", ".htm"];
-const UPLOAD_MAX_MB = 25;
 
-function addUploadRow(name) {
-  let box = document.getElementById("upload-progress");
-  if (!box) {
-    box = document.createElement("div");
-    box.id = "upload-progress";
-    box.className = "upload-progress";
-    document.getElementById("doc-list").before(box);
-  }
-  const row = document.createElement("div");
-  row.className = "upload-row";
-  const top = document.createElement("div");
-  top.className = "upload-top";
-  const nm = document.createElement("span");
-  nm.className = "upload-name";
-  nm.textContent = name;
-  const st = document.createElement("span");
-  st.className = "upload-state";
-  st.textContent = "0%";
-  const bar = document.createElement("div");
-  bar.className = "upload-bar";
-  const fill = document.createElement("div");
-  fill.className = "upload-fill";
-  top.append(nm, st);
-  bar.appendChild(fill);
-  row.append(top, bar);
-  box.appendChild(row);
-  return {
-    progress(p) { fill.style.width = Math.round(p * 100) + "%"; st.textContent = p >= 1 ? "processing..." : Math.round(p * 100) + "%"; },
-    fail() { row.classList.add("failed"); st.textContent = "failed"; fill.style.width = "100%"; },
-    remove() { row.remove(); },
-  };
-}
-
-function uploadWithProgress(file, allowDuplicate, onProgress) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${API_BASE}/api/knowledge-bases/${kbId}/documents?allow_duplicate=${allowDuplicate}`);
-    xhr.setRequestHeader("Authorization", `Bearer ${getToken()}`);
-    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
-    xhr.onload = () => {
-      let data = {};
-      try { data = JSON.parse(xhr.responseText); } catch (e) { /* not JSON */ }
-      if (xhr.status >= 200 && xhr.status < 300) return resolve(data);
-      if (xhr.status === 401) { window.location.href = "auth.html"; return reject(new Error("Please sign in again.")); }
-      reject(new Error(typeof data.detail === "string" ? data.detail : `Upload failed (${xhr.status})`));
-    };
-    xhr.onerror = () => reject(new Error("Could not reach the server. Check your connection and try again."));
-    const fd = new FormData();
-    fd.append("file", file);
-    xhr.send(fd);
-  });
-}
-
-async function handleFiles(files) {
-  for (const file of Array.from(files)) {
-    const ext = (file.name.match(/\.[^.]+$/) || [""])[0].toLowerCase();
-    if (!UPLOAD_EXTS.includes(ext)) {
-      alert(`${file.name}: this file type is not supported. Use PDF, DOCX, PPTX, XLSX, HTML, TXT, MD or CSV.`);
-      continue;
-    }
-    if (file.size > UPLOAD_MAX_MB * 1024 * 1024) {
-      alert(`${file.name}: it is ${(file.size / 1048576).toFixed(1)}MB, and the limit is ${UPLOAD_MAX_MB}MB.`);
-      continue;
-    }
-    const row = addUploadRow(file.name);
-    try {
-      try {
-        await uploadWithProgress(file, false, (p) => row.progress(p));
-      } catch (err) {
-        if (!err.message.includes("matches an existing document")) throw err;
-        if (!(await uiConfirm(`${err.message}\n\nUpload it anyway as a duplicate?`))) { row.remove(); continue; }
-        await uploadWithProgress(file, true, (p) => row.progress(p));
-      }
-      setTimeout(() => row.remove(), 1200);
-      loadKBDetails();
-    } catch (err) {
-      row.fail();
-      alert(`${file.name}: ${err.message}`);
-      setTimeout(() => row.remove(), 8000);
-    }
-  }
-}
-
-// ---- tell the user when a document finishes or fails ----
-const _prevDocStatus = {};
-const _origLoadKB = loadKBDetails;
-loadKBDetails = async function () {
-  await _origLoadKB();
-  ((currentKB && currentKB.documents) || []).forEach(d => {
-    if (_prevDocStatus[d.id] === "processing" && d.status === "ready") alert(`${d.filename} is ready. You can ask about it now.`);
-    if (_prevDocStatus[d.id] === "processing" && d.status === "failed") alert(`${d.filename} could not be processed: ${d.error_message || "unknown error"}`);
-    _prevDocStatus[d.id] = d.status;
-  });
-};
