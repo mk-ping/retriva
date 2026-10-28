@@ -24,9 +24,9 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function renderMarkdown(text) {
+function renderMarkdown(text, maxN) {
   const rawHtml = marked.parse(text, { breaks: true });
-  return addCitations(DOMPurify.sanitize(rawHtml));
+  return addCitations(DOMPurify.sanitize(rawHtml), maxN === undefined ? 99 : maxN);
 }
 
 // account corner menu
@@ -310,7 +310,7 @@ function appendMessage(role, content, sources = [], messageId = null, feedback =
 
   const bubble = document.createElement("div");
   bubble.className = "msg-bubble";
-  bubble.innerHTML = renderMarkdown(content);
+  bubble.innerHTML = renderMarkdown(content, sources.length);
   row.appendChild(bubble);
 
   if (role === "user") {
@@ -616,7 +616,7 @@ document.getElementById("delete-kb-btn").addEventListener("click", async () => {
   }
 });
 // turns [n] into clickable markers, but skips code and pre blocks
-function addCitations(html) {
+function addCitations(html, maxN = 99) {
   const tpl = document.createElement("template");
   tpl.innerHTML = html;
   const walker = document.createTreeWalker(tpl.content, NodeFilter.SHOW_TEXT);
@@ -628,7 +628,7 @@ function addCitations(html) {
     const frag = document.createDocumentFragment();
     n.nodeValue.split(/(\[\d{1,2}\])/).forEach(part => {
       const m = part.match(/^\[(\d{1,2})\]$/);
-      if (m) {
+      if (m && Number(m[1]) >= 1 && Number(m[1]) <= maxN) {
         const s = document.createElement("sup");
         s.className = "cite";
         s.dataset.n = m[1];
