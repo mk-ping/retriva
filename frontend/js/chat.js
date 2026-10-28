@@ -1,3 +1,5 @@
+const UPLOAD_EXTS = [".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".xlsx", ".html", ".htm"];
+const UPLOAD_MAX_MB = 25;
 const params = new URLSearchParams(window.location.search);
 const kbId = params.get("kb");
 
@@ -168,7 +170,7 @@ async function handleFiles(files) {
   }
 }
 
-fileInput.addEventListener("change", () => { handleFiles(fileInput.files); fileInput.value = ""; });
+fileInput.addEventListener("change", () => { const picked = Array.from(fileInput.files); fileInput.value = ""; handleFiles(picked); });
 uploadZone.addEventListener("dragover", (e) => { e.preventDefault(); uploadZone.classList.add("drag-over"); });
 uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag-over"));
 uploadZone.addEventListener("drop", (e) => {
@@ -857,8 +859,8 @@ document.getElementById("doc-list").addEventListener("click", async (e) => {
 });
 
 // ---- uploads with a real progress bar (this replaces the earlier handleFiles above) ----
-const UPLOAD_EXTS = [".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".xlsx", ".html", ".htm"];
-const UPLOAD_MAX_MB = 25;
+
+
 
 function addUploadRow(name) {
   let box = document.getElementById("upload-progress");

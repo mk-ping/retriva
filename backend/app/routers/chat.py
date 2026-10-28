@@ -467,7 +467,7 @@ def suggestions(kb_id: str, db: Session = Depends(get_db), user: User = Depends(
         return {"questions": _suggest_cache[key]}
     docs = col.get(limit=60, include=["documents"])["documents"]
     step = max(1, len(docs) // 5)
-    excerpts = "\n\n---\n\n".join(d[:500] for d in docs[::step][:5])
+    excerpts = "\n\n---\n\n".join(d[:250] for d in docs[::step][:3])
     try:
         raw = _suggest_chain.invoke({"excerpts": excerpts})
     except Exception:

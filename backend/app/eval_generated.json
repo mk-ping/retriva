@@ -1,63 +1,63 @@
 [
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What new network abstraction type was introduced by the ENBC algorithm?",
+    "question": "Which studies have examined community structure in social and biological networks and introduced fuzzy agglomerative community detection?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 18
+    "chunk_index": 179
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What is the value in the \u201cPower\u201d row for the column labeled\u202f0.4?",
+    "question": "What is the first metric value listed for Amazon at threshold\u202f0.3?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 136
+    "chunk_index": 135
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "Who first introduced the link prediction problem for collaboration networks in physics and biology?",
+    "question": "Which factors have recent studies focused on to improve the effectiveness and efficiency of influence maximization solutions?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 22
+    "chunk_index": 21
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "Which ranges of \u03c4 and \u03b8 give the Football dataset a coverage of at least 0.90?",
+    "question": "How is the coverage of a community structure defined and calculated?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 86
+    "chunk_index": 85
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "How does combining community structure information with information diffusion improve link prediction?",
+    "question": "What new approach does the study propose for link prediction, and how does it differ from earlier methods?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
     "chunk_index": 11
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What is the second numeric value that follows the threshold 0.3 in the first block of numbers?",
+    "question": "What is the third metric for Celegansneural when the threshold is 0.2?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 116
+    "chunk_index": 115
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What similarity values are reported for the node pairs O\u2011L, O\u2011M, O\u2011P, and P\u2011M in the study by Singh, Mishra, and Kumar?",
+    "question": "What is the link prediction score for the pair N\u2011O?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 58
+    "chunk_index": 57
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "On which datasets does the CLP\u2011ID algorithm achieve higher AUC than all other methods, and how does its performance compare to RA?",
+    "question": "How does the recall of the CLP\u2011ID algorithm compare to other link\u2011prediction methods across the datasets, especially on the Power dataset?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 121
+    "chunk_index": 120
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What methods were introduced in 2017 and 2018 to improve community detection in networks?",
+    "question": "Which link\u2011prediction methods are cited in the passage?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 19
+    "chunk_index": 189
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "Which websites are listed as sources for the network datasets referenced in the article?",
+    "question": "What do the symbols N, E, D, K, and C represent in the statistical table of the network datasets?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 69
+    "chunk_index": 68
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
@@ -67,115 +67,109 @@
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What is the title of the paper by Singh, Mishra, and Kumar et al. that discusses community-based link prediction using information diffusion?",
+    "question": "What are the two phases of the CD algorithm and what does each phase accomplish?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 5
+    "chunk_index": 49
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What is the seventh metric value for the Power dataset?",
+    "question": "Which dataset achieved the highest performance score in the community\u2011based link prediction results shown?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 151
+    "chunk_index": 150
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What are the metric values for the Political blogs dataset when the threshold is 0.3?",
+    "question": "What is the list of values for the CLP\u202fID Community based link prediction dataset at threshold\u202f0.5?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
     "chunk_index": 107
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What algorithm does the study propose for link prediction that incorporates community information and information diffusion?",
+    "question": "Which state\u2011of\u2011the\u2011art methods does CLP\u2011ID fail to outperform in terms of AUPR?",
+    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
+    "chunk_index": 119
+  },
+  {
+    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
+    "question": "What does the link prediction problem aim to estimate for each target link in the graph?",
+    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
+    "chunk_index": 31
+  },
+  {
+    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
+    "question": "How is the adjacency matrix \\(P\\) defined to represent influence probabilities between nodes in the network model?",
+    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
+    "chunk_index": 28
+  },
+  {
+    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
+    "question": "What is the recall of CLP\u2011ID when the ratio is 0.2 on the Football dataset?",
+    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
+    "chunk_index": 114
+  },
+  {
+    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
+    "question": "Which dataset has the highest value in the first column of the table?",
+    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
+    "chunk_index": 158
+  },
+  {
+    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
+    "question": "What is the name of the link prediction algorithm that incorporates community information and information diffusion as described in the study?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
     "chunk_index": 12
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "How does the community detection algorithm help identify future links in the network?",
+    "question": "What is the time complexity of updating community labels in Algorithm\u202f1?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 32
+    "chunk_index": 60
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "How many links can a directed network with N nodes contain at most?",
+    "question": "What distinguishes the probability matrix\u202fP for directed networks from that of undirected networks?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
     "chunk_index": 29
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What is the second metric for Celegansneural at 0.4?",
-    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 115
-  },
-  {
-    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What are the performance values reported for each dataset (Football, Political blogs, NetScience, Amazon, GrQc, Power, USAir97) in the CLP\u2011ID link\u2011prediction study?",
-    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 159
-  },
-  {
-    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "Which algorithm achieves higher recall than all other methods on every dataset except the Power dataset?",
-    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 120
-  },
-  {
-    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What is the overall time complexity of the CLP\u2011ID algorithm?",
-    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 61
-  },
-  {
-    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What do the statistical tests indicate about how the proposed method compares to existing state\u2011of\u2011the\u2011art algorithms?",
-    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 3
-  },
-  {
-    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "On which datasets does CLP\u2011ID beat every other state\u2011of\u2011the\u2011art method?",
+    "question": "How does CLP\u2011ID\u2019s performance compare to leading link\u2011prediction methods on the USAir97 and Political blogs datasets?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
     "chunk_index": 112
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "What four accuracy metrics are used to evaluate the CLP-ID algorithm?",
+    "question": "On which datasets does the proposed algorithm outperform all other methods except RA?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 64
+    "chunk_index": 128
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "Against which state\u2011of\u2011the\u2011art method does CLP\u2011ID not achieve higher precision on all datasets under different observed link percentages?",
+    "question": "Which dataset had a Friedman test value that exceeded the chi\u2011square threshold, leading to rejection of the null hypothesis?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 129
+    "chunk_index": 154
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "Which dataset had its null hypothesis rejected?",
-    "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 155
-  },
-  {
-    "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "How difficult is it to directly optimize diffusion metrics for link prediction?",
+    "question": "Which stochastic diffusion model is considered most suitable for integrating information diffusion with link prediction?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
     "chunk_index": 9
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "How is the isolability of a community defined in this study?",
+    "question": "How is the isolability of a community defined in the article?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
     "chunk_index": 77
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "Which network in the passage has nodes that represent neurons and edges that represent synapses or gap junctions?",
+    "question": "Which metric provides a single\u2011point summary of precision across all recall levels for evaluating the CLP\u2011ID algorithm?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
-    "chunk_index": 67
+    "chunk_index": 66
   },
   {
     "kb": "2e0b16e8-7e42-424a-9286-16ab479f7d95",
-    "question": "How is the CAR_CN similarity score calculated for a pair of nodes?",
+    "question": "What expression defines the CAR_CN similarity score for a pair of nodes?",
     "doc_id": "3936eee1-b451-45c5-a779-90796da7d868",
     "chunk_index": 72
   }

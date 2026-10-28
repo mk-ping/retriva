@@ -53,7 +53,10 @@ def add_chunks(kb_id: str, doc_id: str, filename: str, chunks: list[dict]):
         if c["page"] is not None:  # Chroma rejects None metadata values
             m["page"] = c["page"]
         metadatas.append(m)
-    store.add_texts(texts=[c["text"] for c in chunks], metadatas=metadatas, ids=ids)
+    title = filename.rsplit(".", 1)[0].replace("_", " ").replace("-", " ")
+    # the title is embedded together with the passage so "it costs $5" still knows what "it" is;
+    # the stored/displayed text stays clean because the title is stripped again on the way out
+    store.add_texts(texts=["[" + title + "] " + c["text"] for c in chunks], metadatas=metadatas, ids=ids)
 
 
 def delete_document_chunks(kb_id: str, doc_id: str):
@@ -81,7 +84,7 @@ def _vector_only_query(kb_id: str, question: str, top_k: int = RETRIEVAL_TOP_K) 
     hits = []
     for doc, dist in results:
         hits.append({
-            "text": doc.page_content,
+            "text": _strip_title(doc.page_content),
             "doc_id": doc.metadata.get("doc_id"),
             "filename": doc.metadata.get("filename"),
             "chunk_index": doc.metadata.get("chunk_index"),
@@ -142,7 +145,7 @@ def _bm25_rank(kb_id: str, question: str, limit: int) -> list[str]:
 
 def _make_hit(text, meta, similarity) -> dict:
     return {
-        "text": text,
+        "text": _strip_title(text),
         "doc_id": meta.get("doc_id"),
         "filename": meta.get("filename"),
         "chunk_index": meta.get("chunk_index"),
@@ -199,3 +202,7 @@ def query(kb_id: str, question: str, top_k: int = RETRIEVAL_TOP_K) -> list[dict]
     kept = [c["hit"] for c in ranked
             if c["hit"]["score"] >= MIN_RELEVANCE_SCORE or (c["k"] is not None and c["k"] < 3)]
     return kept[:top_k]
+
+def _strip_title(text: str) -> str:
+    import re as _re
+    return _re.sub(r"^\[[^\]\n]{0,200}\] ", "", text, count=1)
