@@ -26,6 +26,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     knowledge_bases = relationship("KnowledgeBase", back_populates="owner", cascade="all, delete-orphan")
+    password_resets = relationship("PasswordReset", cascade="all, delete-orphan")
 
 
 class KnowledgeBase(Base):
@@ -90,6 +91,16 @@ class Message(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     chat = relationship("Chat", back_populates="messages")
+
+
+class PasswordReset(Base):
+    __tablename__ = "password_resets"
+
+    id = Column(String, primary_key=True, default=new_id)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    token_hash = Column(String, nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 class ShareLink(Base):

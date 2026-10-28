@@ -117,6 +117,7 @@ function renderDocList(docs) {
         <div class="doc-item-name">${escapeHtml(d.filename)}</div>
         <div class="doc-item-meta">${d.status === "ready" ? d.chunk_count + " passages" : d.status === "failed" ? escapeHtml(d.error_message || "Failed") : "Processing..."}</div>
       </div>
+      <button class="doc-move" data-doc-id="${d.id}" title="Move to another knowledge base">&#8594;</button>
       <button class="doc-reprocess" data-doc-id="${d.id}" title="Reprocess">&#8635;</button>
       <button class="doc-delete" data-doc-id="${d.id}" title="Delete">&times;</button>
     </div>
@@ -798,3 +799,311 @@ document.getElementById("share-kb-btn").addEventListener("click", async () => {
 document.getElementById("rename-kb-btn").addEventListener("click", () => {
   document.getElementById("kb-name").dispatchEvent(new Event("dblclick"));
 });
+
+// ================= batch 11: move, upload progress, status notices =================
+
+// ---- pick a knowledge base to move a document into ----
+function pickKnowledgeBase(kbs) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "ui-overlay";
+    const box = document.createElement("div");
+    box.className = "ui-dialog";
+    box.setAttribute("role", "dialog");
+    const msg = document.createElement("div");
+    msg.className = "ui-msg";
+    msg.textContent = "Move this document to:";
+    const sel = document.createElement("select");
+    sel.className = "ui-input";
+    kbs.forEach(k => { const o = document.createElement("option"); o.value = k.id; o.textContent = k.name; sel.appendChild(o); });
+    const row = document.createElement("div");
+    row.className = "ui-actions";
+    const cancel = document.createElement("button");
+    cancel.className = "btn btn-secondary";
+    cancel.textContent = "Cancel";
+    const ok = document.createElement("button");
+    ok.className = "btn btn-primary";
+    ok.textContent = "Move";
+    row.append(cancel, ok);
+    box.append(msg, sel, row);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    const close = (v) => { document.removeEventListener("keydown", onKey, true); overlay.remove(); resolve(v); };
+    const onKey = (e) => { if (e.key === "Escape") close(null); };
+    document.addEventListener("keydown", onKey, true);
+    ok.addEventListener("click", () => close(sel.value));
+    cancel.addEventListener("click", () => close(null));
+    overlay.addEventListener("mousedown", (e) => { if (e.target === overlay) close(null); });
+    sel.focus();
+  });
+}
+
+document.getElementById("doc-list").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".doc-move");
+  if (!btn) return;
+  e.stopPropagation();
+  try {
+    const kbs = (await api.listKBs()).filter(k => k.id !== kbId);
+    if (!kbs.length) { alert("Create another knowledge base first, then you can move documents into it."); return; }
+    const target = await pickKnowledgeBase(kbs);
+    if (!target) return;
+    await apiRequest(`/api/knowledge-bases/${kbId}/documents/${btn.dataset.docId}/move`, {
+      method: "POST",
+      body: JSON.stringify({ target_kb_id: target }),
+    });
+    alert("Document moved.");
+    loadKBDetails();
+  } catch (err) { alert(err.message); }
+});
+
+// ---- uploads with a real progress bar (this replaces the earlier handleFiles above) ----
+const UPLOAD_EXTS = [".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".xlsx", ".html", ".htm"];
+const UPLOAD_MAX_MB = 25;
+
+function addUploadRow(name) {
+  let box = document.getElementById("upload-progress");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "upload-progress";
+    box.className = "upload-progress";
+    document.getElementById("doc-list").before(box);
+  }
+  const row = document.createElement("div");
+  row.className = "upload-row";
+  const top = document.createElement("div");
+  top.className = "upload-top";
+  const nm = document.createElement("span");
+  nm.className = "upload-name";
+  nm.textContent = name;
+  const st = document.createElement("span");
+  st.className = "upload-state";
+  st.textContent = "0%";
+  const bar = document.createElement("div");
+  bar.className = "upload-bar";
+  const fill = document.createElement("div");
+  fill.className = "upload-fill";
+  top.append(nm, st);
+  bar.appendChild(fill);
+  row.append(top, bar);
+  box.appendChild(row);
+  return {
+    progress(p) { fill.style.width = Math.round(p * 100) + "%"; st.textContent = p >= 1 ? "processing..." : Math.round(p * 100) + "%"; },
+    fail() { row.classList.add("failed"); st.textContent = "failed"; fill.style.width = "100%"; },
+    remove() { row.remove(); },
+  };
+}
+
+function uploadWithProgress(file, allowDuplicate, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_BASE}/api/knowledge-bases/${kbId}/documents?allow_duplicate=${allowDuplicate}`);
+    xhr.setRequestHeader("Authorization", `Bearer ${getToken()}`);
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+    xhr.onload = () => {
+      let data = {};
+      try { data = JSON.parse(xhr.responseText); } catch (e) { /* not JSON */ }
+      if (xhr.status >= 200 && xhr.status < 300) return resolve(data);
+      if (xhr.status === 401) { window.location.href = "auth.html"; return reject(new Error("Please sign in again.")); }
+      reject(new Error(typeof data.detail === "string" ? data.detail : `Upload failed (${xhr.status})`));
+    };
+    xhr.onerror = () => reject(new Error("Could not reach the server. Check your connection and try again."));
+    const fd = new FormData();
+    fd.append("file", file);
+    xhr.send(fd);
+  });
+}
+
+async function handleFiles(files) {
+  for (const file of Array.from(files)) {
+    const ext = (file.name.match(/\.[^.]+$/) || [""])[0].toLowerCase();
+    if (!UPLOAD_EXTS.includes(ext)) {
+      alert(`${file.name}: this file type is not supported. Use PDF, DOCX, PPTX, XLSX, HTML, TXT, MD or CSV.`);
+      continue;
+    }
+    if (file.size > UPLOAD_MAX_MB * 1024 * 1024) {
+      alert(`${file.name}: it is ${(file.size / 1048576).toFixed(1)}MB, and the limit is ${UPLOAD_MAX_MB}MB.`);
+      continue;
+    }
+    const row = addUploadRow(file.name);
+    try {
+      try {
+        await uploadWithProgress(file, false, (p) => row.progress(p));
+      } catch (err) {
+        if (!err.message.includes("matches an existing document")) throw err;
+        if (!(await uiConfirm(`${err.message}\n\nUpload it anyway as a duplicate?`))) { row.remove(); continue; }
+        await uploadWithProgress(file, true, (p) => row.progress(p));
+      }
+      setTimeout(() => row.remove(), 1200);
+      loadKBDetails();
+    } catch (err) {
+      row.fail();
+      alert(`${file.name}: ${err.message}`);
+      setTimeout(() => row.remove(), 8000);
+    }
+  }
+}
+
+// ---- tell the user when a document finishes or fails ----
+const _prevDocStatus = {};
+const _origLoadKB = loadKBDetails;
+loadKBDetails = async function () {
+  await _origLoadKB();
+  ((currentKB && currentKB.documents) || []).forEach(d => {
+    if (_prevDocStatus[d.id] === "processing" && d.status === "ready") alert(`${d.filename} is ready. You can ask about it now.`);
+    if (_prevDocStatus[d.id] === "processing" && d.status === "failed") alert(`${d.filename} could not be processed: ${d.error_message || "unknown error"}`);
+    _prevDocStatus[d.id] = d.status;
+  });
+};
+
+// ---- move a document to another knowledge base ----
+function pickKnowledgeBase(kbs) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "ui-overlay";
+    const box = document.createElement("div");
+    box.className = "ui-dialog";
+    box.setAttribute("role", "dialog");
+    const msg = document.createElement("div");
+    msg.className = "ui-msg";
+    msg.textContent = "Move this document to:";
+    const sel = document.createElement("select");
+    sel.className = "ui-input";
+    kbs.forEach(k => { const o = document.createElement("option"); o.value = k.id; o.textContent = k.name; sel.appendChild(o); });
+    const row = document.createElement("div");
+    row.className = "ui-actions";
+    const cancel = document.createElement("button");
+    cancel.className = "btn btn-secondary";
+    cancel.textContent = "Cancel";
+    const ok = document.createElement("button");
+    ok.className = "btn btn-primary";
+    ok.textContent = "Move";
+    row.append(cancel, ok);
+    box.append(msg, sel, row);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    const close = (v) => { document.removeEventListener("keydown", onKey, true); overlay.remove(); resolve(v); };
+    const onKey = (e) => { if (e.key === "Escape") close(null); };
+    document.addEventListener("keydown", onKey, true);
+    ok.addEventListener("click", () => close(sel.value));
+    cancel.addEventListener("click", () => close(null));
+    overlay.addEventListener("mousedown", (e) => { if (e.target === overlay) close(null); });
+    sel.focus();
+  });
+}
+
+document.getElementById("doc-list").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".doc-move");
+  if (!btn) return;
+  e.stopPropagation();
+  try {
+    const kbs = (await api.listKBs()).filter(k => k.id !== kbId);
+    if (!kbs.length) { alert("Create another knowledge base first, then you can move documents into it."); return; }
+    const target = await pickKnowledgeBase(kbs);
+    if (!target) return;
+    await apiRequest(`/api/knowledge-bases/${kbId}/documents/${btn.dataset.docId}/move`, {
+      method: "POST",
+      body: JSON.stringify({ target_kb_id: target }),
+    });
+    alert("Document moved.");
+    loadKBDetails();
+  } catch (err) { alert(err.message); }
+});
+
+// ---- uploads with a real progress bar (replaces the earlier handleFiles) ----
+const UPLOAD_EXTS = [".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".xlsx", ".html", ".htm"];
+const UPLOAD_MAX_MB = 25;
+
+function addUploadRow(name) {
+  let box = document.getElementById("upload-progress");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "upload-progress";
+    box.className = "upload-progress";
+    document.getElementById("doc-list").before(box);
+  }
+  const row = document.createElement("div");
+  row.className = "upload-row";
+  const top = document.createElement("div");
+  top.className = "upload-top";
+  const nm = document.createElement("span");
+  nm.className = "upload-name";
+  nm.textContent = name;
+  const st = document.createElement("span");
+  st.className = "upload-state";
+  st.textContent = "0%";
+  const bar = document.createElement("div");
+  bar.className = "upload-bar";
+  const fill = document.createElement("div");
+  fill.className = "upload-fill";
+  top.append(nm, st);
+  bar.appendChild(fill);
+  row.append(top, bar);
+  box.appendChild(row);
+  return {
+    progress(p) { fill.style.width = Math.round(p * 100) + "%"; st.textContent = p >= 1 ? "processing..." : Math.round(p * 100) + "%"; },
+    fail() { row.classList.add("failed"); st.textContent = "failed"; fill.style.width = "100%"; },
+    remove() { row.remove(); },
+  };
+}
+
+function uploadWithProgress(file, allowDuplicate, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_BASE}/api/knowledge-bases/${kbId}/documents?allow_duplicate=${allowDuplicate}`);
+    xhr.setRequestHeader("Authorization", `Bearer ${getToken()}`);
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+    xhr.onload = () => {
+      let data = {};
+      try { data = JSON.parse(xhr.responseText); } catch (e) { /* not JSON */ }
+      if (xhr.status >= 200 && xhr.status < 300) return resolve(data);
+      if (xhr.status === 401) { window.location.href = "auth.html"; return reject(new Error("Please sign in again.")); }
+      reject(new Error(typeof data.detail === "string" ? data.detail : `Upload failed (${xhr.status})`));
+    };
+    xhr.onerror = () => reject(new Error("Could not reach the server. Check your connection and try again."));
+    const fd = new FormData();
+    fd.append("file", file);
+    xhr.send(fd);
+  });
+}
+
+async function handleFiles(files) {
+  for (const file of Array.from(files)) {
+    const ext = (file.name.match(/\.[^.]+$/) || [""])[0].toLowerCase();
+    if (!UPLOAD_EXTS.includes(ext)) {
+      alert(`${file.name}: this file type is not supported. Use PDF, DOCX, PPTX, XLSX, HTML, TXT, MD or CSV.`);
+      continue;
+    }
+    if (file.size > UPLOAD_MAX_MB * 1024 * 1024) {
+      alert(`${file.name}: it is ${(file.size / 1048576).toFixed(1)}MB, and the limit is ${UPLOAD_MAX_MB}MB.`);
+      continue;
+    }
+    const row = addUploadRow(file.name);
+    try {
+      try {
+        await uploadWithProgress(file, false, (p) => row.progress(p));
+      } catch (err) {
+        if (!err.message.includes("matches an existing document")) throw err;
+        if (!(await uiConfirm(`${err.message}\n\nUpload it anyway as a duplicate?`))) { row.remove(); continue; }
+        await uploadWithProgress(file, true, (p) => row.progress(p));
+      }
+      setTimeout(() => row.remove(), 1200);
+      loadKBDetails();
+    } catch (err) {
+      row.fail();
+      alert(`${file.name}: ${err.message}`);
+      setTimeout(() => row.remove(), 8000);
+    }
+  }
+}
+
+// ---- tell the user when a document finishes or fails ----
+const _prevDocStatus = {};
+const _origLoadKB = loadKBDetails;
+loadKBDetails = async function () {
+  await _origLoadKB();
+  ((currentKB && currentKB.documents) || []).forEach(d => {
+    if (_prevDocStatus[d.id] === "processing" && d.status === "ready") alert(`${d.filename} is ready. You can ask about it now.`);
+    if (_prevDocStatus[d.id] === "processing" && d.status === "failed") alert(`${d.filename} could not be processed: ${d.error_message || "unknown error"}`);
+    _prevDocStatus[d.id] = d.status;
+  });
+};

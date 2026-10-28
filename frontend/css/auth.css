@@ -101,3 +101,16 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+
+.auth-alert.ok { background: #EEF4EA; border-color: #C9D9C0; color: #4F6B44; }
+.forgot-link { display: block; text-align: center; font-size: var(--text-xs); color: var(--ink-3); margin-top: var(--space-1); }
+.forgot-link:hover { color: var(--ink); }
+.back-link { text-align: center; font-size: var(--text-xs); color: var(--ink-3); margin-top: var(--space-5); }
+.back-link a:hover { color: var(--ink); }
+
+.auth-alert.ok { background: #EEF4EA; border-color: #C9D9C0; color: #4F6B44; }
+.forgot-link { display: block; text-align: center; font-size: var(--text-xs); color: var(--ink-3); margin-top: var(--space-1); }
+.forgot-link:hover { color: var(--ink); }
+.back-link { text-align: center; font-size: var(--text-xs); color: var(--ink-3); margin-top: var(--space-5); }
+.back-link a:hover { color: var(--ink); }

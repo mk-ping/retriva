@@ -189,7 +189,7 @@ async function quickUpload(fileList) {
     }
     const failed = [];
     for (const f of files) {
-      try { await api.uploadDocument(targetId, f); }
+      try { title.textContent = "Uploading " + (files.indexOf(f) + 1) + " of " + files.length + ": " + f.name; await api.uploadDocument(targetId, f); }
       catch (err) { failed.push(f.name + ": " + err.message); }
     }
     if (failed.length) {

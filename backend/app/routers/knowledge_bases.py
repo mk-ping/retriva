@@ -114,7 +114,7 @@ def _process_document(doc_id: str, kb_id: str, filepath: str, ext: str):
         chunks = ingestion.extract_and_chunk(filepath, ext)
         if not chunks:
             doc.status = "failed"
-            doc.error_message = "No extractable text found in this file."
+            doc.error_message = "No readable text found. If this is a scan or photo, the text could not be recognised: try a clearer, higher-resolution scan."
             db.commit()
             return
 
@@ -126,7 +126,7 @@ def _process_document(doc_id: str, kb_id: str, filepath: str, ext: str):
         doc = db.query(Document).filter(Document.id == doc_id).first()
         if doc:
             doc.status = "failed"
-            doc.error_message = str(e)
+            doc.error_message = _friendly_error(e, ext)
             db.commit()
     finally:
         db.close()
@@ -364,4 +364,70 @@ def add_url(kb_id: str, body: UrlIn, background_tasks: BackgroundTasks, db: Sess
     with open(filepath, "wb") as f:
         f.write(content)
     background_tasks.add_task(_process_document, doc.id, kb.id, filepath, ".html")
+    return _doc_to_out(doc)
+
+# ---------- batch 11: clearer errors and moving documents ----------
+def _friendly_error(e: Exception, ext: str) -> str:
+    import zipfile
+    msg = str(e) or e.__class__.__name__
+    low = msg.lower()
+    if isinstance(e, ingestion.IngestionError):
+        return msg
+    if isinstance(e, zipfile.BadZipFile) or "not a zip file" in low:
+        return "This file looks damaged, or is not a real Office file. Re-save it and upload again."
+    if "decrypt" in low or "password" in low or "encrypted" in low:
+        return "This file is password-protected. Remove the password and upload again."
+    if isinstance(e, UnicodeDecodeError) or "codec can't decode" in low:
+        return "This text file uses an unsupported encoding. Save it as UTF-8 and upload again."
+    if isinstance(e, MemoryError):
+        return "This file is too large or complex for the server to process."
+    return "Could not read this file (" + msg[:120] + "). Try re-saving it, then click the reload button to retry."
+
+
+class MoveIn(BaseModel):
+    target_kb_id: str
+
+
+@router.post("/{kb_id}/documents/{doc_id}/move", response_model=DocumentOut)
+def move_document(kb_id: str, doc_id: str, body: MoveIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    src = _get_owned_kb(kb_id, user, db)
+    dst = _get_owned_kb(body.target_kb_id, user, db)
+    if src.id == dst.id:
+        raise HTTPException(status_code=400, detail="The document is already in that knowledge base.")
+    doc = db.query(Document).filter(Document.id == doc_id, Document.knowledge_base_id == src.id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found.")
+    if doc.status != "ready":
+        raise HTTPException(status_code=400, detail="Wait until the document has a green dot before moving it.")
+    if doc.file_hash and db.query(Document).filter(Document.knowledge_base_id == dst.id, Document.file_hash == doc.file_hash).first():
+        raise HTTPException(status_code=409, detail="That knowledge base already has a document with the same content.")
+
+    src_col = vectorstore._get_store(src.id)._collection
+    dst_col = vectorstore._get_store(dst.id)._collection
+    got = src_col.get(where={"doc_id": doc.id}, include=["documents", "metadatas", "embeddings"])
+    ids = got["ids"]
+    if len(ids):  # copy the already-computed vectors, so nothing is re-embedded
+        embs = [e.tolist() if hasattr(e, "tolist") else list(e) for e in got["embeddings"]]
+        dst_col.add(ids=ids, documents=got["documents"], metadatas=got["metadatas"], embeddings=embs)
+
+    old_path = os.path.join(UPLOAD_DIR, src.id, f"{doc.id}{doc.file_type}")
+    new_dir = os.path.join(UPLOAD_DIR, dst.id)
+    os.makedirs(new_dir, exist_ok=True)
+    new_path = os.path.join(new_dir, os.path.basename(old_path))
+    try:
+        if os.path.exists(old_path):
+            shutil.move(old_path, new_path)
+        doc.knowledge_base_id = dst.id
+        db.commit()
+    except Exception:
+        db.rollback()
+        if len(ids):
+            dst_col.delete(ids=ids)
+        if os.path.exists(new_path) and not os.path.exists(old_path):
+            shutil.move(new_path, old_path)
+        raise HTTPException(status_code=500, detail="Could not move the document. Nothing was changed.")
+
+    if len(ids):
+        src_col.delete(ids=ids)
+    db.refresh(doc)
     return _doc_to_out(doc)

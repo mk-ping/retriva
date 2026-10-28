@@ -174,3 +174,13 @@ code, .mono { font-family: var(--font-mono); }
 .ui-input { width: 100%; margin-top: var(--space-3); padding: 10px 12px; border: 1px solid var(--line-2); border-radius: var(--radius-md); background: var(--bg); color: var(--ink); outline: none; }
 .ui-input:focus { border-color: var(--sage-deep); }
 .ui-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-5); }
+
+.ui-step { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); margin-bottom: var(--space-2); }
+.ui-title { font-family: var(--font-display); font-size: var(--text-xl); color: var(--ink); margin-bottom: var(--space-2); }
+.ui-skip { margin-right: auto; color: var(--ink-3); font-size: var(--text-sm); padding-left: 0; }
+.ui-skip:hover { color: var(--ink); }
+
+.ui-step { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); margin-bottom: var(--space-2); }
+.ui-title { font-family: var(--font-display); font-size: var(--text-xl); color: var(--ink); margin-bottom: var(--space-2); }
+.ui-skip { margin-right: auto; color: var(--ink-3); font-size: var(--text-sm); padding-left: 0; }
+.ui-skip:hover { color: var(--ink); }

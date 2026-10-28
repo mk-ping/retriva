@@ -52,3 +52,8 @@ CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if 
 OCR_MAX_PAGES = int(os.getenv("OCR_MAX_PAGES", "50"))
 
 DAILY_MESSAGE_LIMIT = int(os.getenv("DAILY_MESSAGE_LIMIT", "100"))
+
+
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+MAIL_FROM = os.getenv("MAIL_FROM", "Retriva <onboarding@resend.dev>")
+APP_URL = os.getenv("APP_URL", "http://localhost:5500")
