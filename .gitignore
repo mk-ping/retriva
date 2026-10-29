@@ -7,3 +7,6 @@ storage/
 *.db
 .DS_Store
 .env.prod
+
+backend/app/eval_generated.json
+eval_*.md
