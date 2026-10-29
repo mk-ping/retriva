@@ -67,9 +67,3 @@ FastAPI, SQLAlchemy, Postgres, ChromaDB, LangChain, Groq, vanilla JS, Docker, ng
 Open http://localhost:5500. Run the tests with:
 
     docker compose exec backend python -m pytest -q
-
-## Limitations
-
-- One server worker only (ChromaDB and the in-memory rate limiter are not multi-process safe).
-- Free-tier Groq limits can cause temporary "model unavailable" errors.
-- Answers can still be wrong, which is why sources are always shown.
