@@ -4,11 +4,11 @@ import re
 from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader, CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from config import ALLOWED_EXTENSIONS, MAX_FILE_SIZE_MB, OCR_MAX_PAGES
+from config import ALLOWED_EXTENSIONS, MAX_FILE_SIZE_MB, OCR_MAX_PAGES, CHUNK_SIZE, CHUNK_OVERLAP
 
 # fixed-size chunks keep every piece small enough for the embedding model to read fully
 # and keep the prompt well under Groq's free-tier tokens-per-minute limit
-_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=120)
+_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
 
 
 class IngestionError(Exception):
@@ -113,7 +113,7 @@ def _xlsx_chunks(filepath: str) -> list[dict]:
                         name = header[i] if i < len(header) and header[i] else f"col{i + 1}"
                         pairs.append(f"{name}: {v}")
                 line = "; ".join(pairs)
-                if size + len(line) > 800:
+                if size + len(line) > CHUNK_SIZE:
                     flush()
                 buf.append(line)
                 size += len(line)
