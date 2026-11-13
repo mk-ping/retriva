@@ -39,7 +39,7 @@ def main():
 
     print(f"\n{len(cases)} questions, top {RETRIEVAL_TOP_K} results\n")
     print("| Method | Hit rate | MRR | Avg latency |\n|---|---|---|---|")
-    for label, fn in (("Hybrid (keyword + vector)", vectorstore.query), ("Vector only", vectorstore._vector_only_query)):
+    for label, fn in (("Hybrid (keyword + vector)", lambda k, q: vectorstore.query(k, q, rerank=False)), ("Hybrid + rerank", lambda k, q: vectorstore.query(k, q, rerank=True)), ("Vector only", vectorstore._vector_only_query)):
         hits_found, rr, total_t = 0, 0.0, 0.0
         for c in cases:
             t0 = time.time()

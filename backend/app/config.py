@@ -59,3 +59,6 @@ MAIL_FROM = os.getenv("MAIL_FROM", "Retriva <onboarding@resend.dev>")
 APP_URL = os.getenv("APP_URL", "http://localhost:5500")
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "800"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "120"))
+
+RERANK = os.getenv("RERANK", "0") == "1"
+RERANK_CANDIDATES = int(os.getenv("RERANK_CANDIDATES", "20"))

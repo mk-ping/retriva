@@ -2,7 +2,9 @@ from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 from langchain_core.embeddings import Embeddings
 from langchain_community.vectorstores import Chroma
 
-from config import CHROMA_DIR, RETRIEVAL_TOP_K, MIN_RELEVANCE_SCORE
+from config import CHROMA_DIR, RETRIEVAL_TOP_K, MIN_RELEVANCE_SCORE, RERANK, RERANK_CANDIDATES
+import logging
+import reranker
 
 _store_cache = {}
 
@@ -154,7 +156,7 @@ def _make_hit(text, meta, similarity) -> dict:
     }
 
 
-def query(kb_id: str, question: str, top_k: int = RETRIEVAL_TOP_K, doc_ids: list[str] | None = None) -> list[dict]:
+def query(kb_id: str, question: str, top_k: int = RETRIEVAL_TOP_K, doc_ids: list[str] | None = None, rerank: bool | None = None) -> list[dict]:
     store = _get_store(kb_id)
     col = store._collection
     where = {"doc_id": {"$in": doc_ids}} if doc_ids else None
@@ -202,6 +204,11 @@ def query(kb_id: str, question: str, top_k: int = RETRIEVAL_TOP_K, doc_ids: list
     # keep a chunk if it is semantically close, or is one of the top 3 exact-keyword matches
     kept = [c["hit"] for c in ranked
             if c["hit"]["score"] >= MIN_RELEVANCE_SCORE or (c["k"] is not None and c["k"] < 3)]
+    if (RERANK if rerank is None else rerank) and len(kept) > 1:
+        try:
+            return reranker.rerank(question, kept[:RERANK_CANDIDATES], top_k)
+        except Exception:
+            logging.getLogger("retriva").exception("reranker failed, using hybrid order")
     return kept[:top_k]
 
 def _strip_title(text: str) -> str:
