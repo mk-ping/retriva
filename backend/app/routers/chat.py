@@ -108,6 +108,7 @@ class MessageIn(BaseModel):
     content: str = ""
     regenerate: bool = False
     search_all: bool = False
+    doc_ids: list[str] = []
 
 
 class ChatRename(BaseModel):
@@ -284,7 +285,7 @@ def send_message(chat_id: str, body: MessageIn, db: Session = Depends(get_db), u
     if small_talk:
         return reply(SMALL_TALK_REPLIES[small_talk], [])
 
-    hits = _retrieve(db, chat, user, _search_query(question, history), body.search_all)
+    hits = _retrieve(db, chat, user, _search_query(question, history), body.search_all, body.doc_ids)
     if not hits:
         return reply(NO_CONTEXT_REPLY, [])
 
@@ -530,14 +531,14 @@ def downvoted(db: Session = Depends(get_db), user: User = Depends(get_current_us
 from config import RETRIEVAL_TOP_K
 
 
-def _retrieve(db: Session, chat: Chat, user: User, query_text: str, search_all: bool) -> list[dict]:
+def _retrieve(db: Session, chat: Chat, user: User, query_text: str, search_all: bool, doc_ids=None) -> list[dict]:
     if search_all:
         kb_ids = [k.id for k in db.query(KnowledgeBase).filter(KnowledgeBase.user_id == user.id).all()]
     else:
         kb_ids = [chat.knowledge_base_id]
     hits = []
     for kid in kb_ids:
-        for h in vectorstore.query(kid, query_text):
+        for h in vectorstore.query(kid, query_text, doc_ids=None if search_all else doc_ids):
             h["kb_id"] = kid
             hits.append(h)
     # scores are cosine similarities, so they are comparable across knowledge bases

@@ -114,7 +114,7 @@ function renderDocList(docs) {
   }
   list.innerHTML = docs.map(d => `
     <div class="doc-item">
-      <div class="doc-status-dot ${d.status}" title="${d.status}"></div>
+      ${d.status === "ready" ? `<input type="checkbox" class="doc-pick" data-doc-id="${d.id}" ${(window.RETRIVA_DOC_IDS || []).includes(d.id) ? "checked" : ""} title="Tick to search only the ticked documents">` : ""}<div class="doc-status-dot ${d.status}" title="${d.status}"></div>
       <div class="doc-item-text">
         <div class="doc-item-name">${escapeHtml(d.filename)}</div>
         <div class="doc-item-meta">${d.status === "ready" ? d.chunk_count + " passages" : d.status === "failed" ? escapeHtml(d.error_message || "Failed") : "Processing..."}</div>
@@ -959,3 +959,17 @@ loadKBDetails = async function () {
 
 
 
+
+
+// ---- search only the ticked documents (nothing ticked = whole knowledge base) ----
+window.RETRIVA_DOC_IDS = [];
+function syncDocPicks() {
+  window.RETRIVA_DOC_IDS = Array.from(document.querySelectorAll(".doc-pick:checked")).map(c => c.dataset.docId);
+  const n = window.RETRIVA_DOC_IDS.length;
+  chatInput.placeholder = n ? `Ask a question (searching ${n} selected document${n === 1 ? "" : "s"})...` : "Ask a question...";
+}
+document.getElementById("doc-list").addEventListener("change", (e) => {
+  if (e.target.classList.contains("doc-pick")) syncDocPicks();
+});
+// after every re-render, drop ids of documents that no longer exist
+new MutationObserver(syncDocPicks).observe(document.getElementById("doc-list"), { childList: true });

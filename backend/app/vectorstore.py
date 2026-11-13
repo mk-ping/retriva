@@ -109,9 +109,9 @@ def _tokens(text: str) -> list[str]:
     return [t for t in re.findall(r"[a-z0-9]+", text.lower()) if t not in _STOP and len(t) > 1]
 
 
-def _bm25_rank(kb_id: str, question: str, limit: int) -> list[str]:
+def _bm25_rank(kb_id: str, question: str, limit: int, where=None) -> list[str]:
     """Returns chunk ids ranked by keyword match. Scans the whole KB in memory (fine up to a few thousand chunks)."""
-    data = _get_store(kb_id)._collection.get(include=["documents"])
+    data = _get_store(kb_id)._collection.get(where=where, include=["documents"])
     ids, docs = data["ids"], data["documents"]
     q = set(_tokens(question))
     if not docs or not q:
@@ -154,22 +154,23 @@ def _make_hit(text, meta, similarity) -> dict:
     }
 
 
-def query(kb_id: str, question: str, top_k: int = RETRIEVAL_TOP_K) -> list[dict]:
+def query(kb_id: str, question: str, top_k: int = RETRIEVAL_TOP_K, doc_ids: list[str] | None = None) -> list[dict]:
     store = _get_store(kb_id)
     col = store._collection
-    total = col.count()
+    where = {"doc_id": {"$in": doc_ids}} if doc_ids else None
+    total = len(col.get(where=where, include=[])["ids"]) if where else col.count()
     if total == 0:
         return []
 
     # 1) vector candidates
     cands = {}
-    for rank, (doc, dist) in enumerate(store.similarity_search_with_score(question, k=min(20, total))):
+    for rank, (doc, dist) in enumerate(store.similarity_search_with_score(question, k=min(20, total), filter=where)):
         cid = f"{doc.metadata.get('doc_id')}_{doc.metadata.get('chunk_index')}"
         cands[cid] = {"hit": _make_hit(doc.page_content, doc.metadata, 1 - dist), "v": rank, "k": None}
 
     # 2) keyword candidates; ones the vector search missed get their real cosine score computed
     missing = []
-    for rank, cid in enumerate(_bm25_rank(kb_id, question, 10)):
+    for rank, cid in enumerate(_bm25_rank(kb_id, question, 10, where)):
         if cid in cands:
             cands[cid]["k"] = rank
         else:

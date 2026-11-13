@@ -76,7 +76,7 @@ const api = {
   updateKB: (kbId, name, description) => apiRequest(`/api/knowledge-bases/${kbId}`, { method: "PATCH", body: JSON.stringify({ name, description }) }),
   deleteChat: (chatId) => apiRequest(`/api/chats/${chatId}`, { method: "DELETE" }),
   sendMessage: (chatId, content, regenerate = false) =>
-    apiRequest(`/api/chats/${chatId}/messages`, { method: "POST", body: JSON.stringify({ content, regenerate, search_all: window.RETRIVA_SEARCH_ALL === true }) }),
+    apiRequest(`/api/chats/${chatId}/messages`, { method: "POST", body: JSON.stringify({ content, regenerate, search_all: window.RETRIVA_SEARCH_ALL === true, doc_ids: window.RETRIVA_DOC_IDS || [] }) }),
 };
 
 async function streamMessage(chatId, content, signal) {
@@ -84,7 +84,7 @@ async function streamMessage(chatId, content, signal) {
   const res = await fetch(`${API_BASE}/api/chats/${chatId}/messages/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-    body: JSON.stringify({ content, search_all: window.RETRIVA_SEARCH_ALL === true }),
+    body: JSON.stringify({ content, search_all: window.RETRIVA_SEARCH_ALL === true, doc_ids: window.RETRIVA_DOC_IDS || [] }),
     signal,
   });
   if (!res.ok) {

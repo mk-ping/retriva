@@ -710,3 +710,4 @@
 .upload-fill { height: 100%; width: 0; background: var(--sage-deep); transition: width 0.15s var(--ease); }
 .upload-row.failed .upload-fill { background: var(--danger); }
 .upload-row.failed .upload-state { color: var(--danger); }
+.doc-pick { accent-color: var(--sage-deep); flex-shrink: 0; cursor: pointer; }
